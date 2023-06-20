@@ -1,0 +1,22 @@
+
+<html>
+<head>
+<script>
+function navFrame(url) {
+  document.getElementById("frame1").src = url;
+}
+</script>
+</head>
+<body>
+<h1>Cross-site iframe test</h1>
+
+Frame 1:<br>
+<iframe
+    id="frame1" src="data:text/html,Initial page"
+    width=500 height=300 top=3000px></iframe><br>
+<button onclick="navFrame('https://csreis.github.io')">Go cross-site (simple page)</button>
+<button onclick="navFrame('https://build.chromium.org')">Go cross-site (complex page)</button>
+<button onclick="navFrame('test.html')">Go same-site</button>
+<p>
+
+</html>
