@@ -1,11 +1,6 @@
 
 <html>
 <head>
-<script>
-function navFrame(url) {
-  document.getElementById("frame1").src = url;
-}
-</script>
 <style>
 #frame1 {
   position: absolute;
@@ -18,11 +13,8 @@ function navFrame(url) {
 
 Frame 1:<br>
 <iframe
-    id="frame1" src="data:text/html,Initial page"
+    id="frame1" src="www.example.com"
     width=500 height=300></iframe><br>
-<button onclick="navFrame('https://csreis.github.io')">Go cross-site (simple page)</button>
-<button onclick="navFrame('https://build.chromium.org')">Go cross-site (complex page)</button>
-<button onclick="navFrame('test.html')">Go same-site</button>
 <p>
 
 </html>
