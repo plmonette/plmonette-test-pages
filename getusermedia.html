@@ -23,6 +23,22 @@ async function startCapture(displayMediaOptions) {
 function StartCapture1() {
   startCapture({});
 }
+	
+async function startCapture2(displayMediaOptions) {
+	navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
+  	.then((stream) => {
+      let video = document.getElementById("video2");
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch((err) => {
+    	console.error(`Error: ${err}`);
+    });
+}
+
+function StartCapture2() {
+  startCapture2({});
+}
 
 
 
