@@ -1,327 +1,38 @@
-
-<!DOCTYPE html>
 <html>
 <head>
-  <title>gUM Test Page</title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8" charset="utf-8">
-  <link href="https://fonts.googleapis.com/css?family=Gentium+Basic:400,700" rel="stylesheet" type="text/css">
-  <style>
-    #main {
-      display: block;
-      margin: 0px auto;
-      text-align: center
-    }
-    #content {
-      display: inline-block;
-    }
-    #frames {
-      display: inline-block;
-      max-width: 180px;
-      vertical-align: top;
-    }
-    #startbuttons {
-      display: block;
-    }
-    #stopbuttons {
-      display: none;
-    }
-    #message {
-      font-size: 24px;
-      font-family: "Gentium Basic", serif;
-    }
-    h1 {
-      font-size: 40px;
-      font-family: "Gentium Basic", serif;
-    }
-    input {
-      font-size: 28px;
-      font-family: "Gentium Basic", serif;
-    }
-    p {
-      color: green;
-    }
-    p.error {
-      color: red;
-    }
-    input[type=number] {
-      width: 65px;
-    }
-  </style>
-  <script type="application/javascript">
-    
-  if (!navigator.mediaDevices.getUserMedia) {
-    document.getElementById("gum_warn").style.display = "none";
-  }
+<style>
+video {
+  width: 400px;
+  height: 300px;
+  background-color: blue;
+}
+</style>
+<script>
+async function startCapture(displayMediaOptions) {
+	navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
+  	.then((stream) => {
+      let video = document.getElementById("video1");
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch((err) => {
+    	console.error(`Error: ${err}`);
+    });
+}
 
-  const video2 = document.createElement("video");
-  video2.setAttribute("width", 640);
-  video2.setAttribute("height", 480);
-    
-  const video = document.createElement("video");
-  video.setAttribute("width", 640);
-  video.setAttribute("height", 480);
+function StartCapture1() {
+  startCapture({});
+}
 
-  const muted = document.createElement("input");
-  muted.type = "checkbox";
-  muted.checked = true;
-  muted.onclick = () => { video.muted = muted.checked; };
 
-  const mute = document.createElement("label");
-  mute.innerHTML = "Volume mute";
-  mute.insertBefore(muted, mute.firstChild);
 
-  const snapshots = [];
-
-  const audio = document.createElement("audio");
-  audio.setAttribute("controls", true);
-
-  const start = document.getElementById("startbuttons");
-  const stop = document.getElementById("stopbuttons");
-
-  const message = document.getElementById("message");
-  const content = document.getElementById("content");
-  const frames = document.getElementById("frames");
-  const snapshot = document.getElementById("snapshot");
-
-  let saved_stream = null;
-  let capturing = false;
-  let running = false;
-
-  function startScreen() {
-    startMedia2("getDisplayMedia", {video: true});
-  }
-
-  function startTab() {
-    startMedia("getDisplayMedia",
-      {
-        video: { mediaSource: "browser",
-                 scrollWithPage: true },
-      });
-  }
-
-  function startAudioVideo() {
-    startMedia("getUserMedia", {video: true, audio: true});
-  }
-
-  function startAudio() {
-    startMedia("getUserMedia", {audio: true});
-  }
-
-  function startVideo() {
-    startMedia("getUserMedia", {video: true});
-  }
-
-  function stopMedia() {
-    if (video.srcObject) {
-      for (const track of video.srcObject.getTracks()) {
-        track.stop();
-      }
-      video.srcObject = null;
-      content.removeChild(video);
-      if (mute.parentNode) {
-        controls.removeChild(mute);
-      }
-      stopbuttons.removeChild(snapshot);
-      snapshot.value = "Snapshot";
-      frames.innerHTML = '';
-      capturing = false;
-    } else if (audio.srcObject) {
-      for (const track of audio.srcObject.getTracks()) {
-        track.stop();
-      }
-      audio.srcObject = null;
-      content.removeChild(audio);
-    }
-    saved_stream = null;
-    stop.style.display = "none";
-    start.style.display = "block";
-    running = false;
-  }
-  function stopMedia2() {
-    if (video2.srcObject) {
-      for (const track of video2.srcObject.getTracks()) {
-        track.stop();
-      }
-      video2.srcObject = null;
-      content.removeChild(video2);
-      if (mute.parentNode) {
-        controls.removeChild(mute);
-      }
-      stopbuttons.removeChild(snapshot);
-      snapshot.value = "Snapshot";
-      frames.innerHTML = '';
-      capturing = false;
-    } else if (audio.srcObject) {
-      for (const track of audio.srcObject.getTracks()) {
-        track.stop();
-      }
-      audio.srcObject = null;
-      content.removeChild(audio);
-    }
-    saved_stream = null;
-    stop.style.display = "none";
-    start.style.display = "block";
-    running = false;
-  }
-
-  function pauseMedia() {
-    if (saved_stream) {
-      if (saved_stream.getVideoTracks().length) {
-        video.srcObject = saved_stream;
-        video.play();
-      } else {
-        audio.srcObject = saved_stream;
-        audio.play();
-      }
-      saved_stream = null;
-    } else {
-      if (video.srcObject) {
-        video.pause();
-        saved_stream = video.srcObject;
-        video.srcObject = null;
-      } else if (audio.srcObject) {
-        audio.pause();
-        saved_stream = audio.srcObject;
-        audio.srcObject = null;
-      }
-    }
-  }
-
-  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-  async function startMedia2(gum, constraints) {
-    stop.style.display = "block";
-    start.style.display = "none";
-    try {
-      const stream = await navigator.mediaDevices[gum](constraints);
-      message.innerHTML = "<p>Success!</p>";
-      if (stream.getVideoTracks().length) {
-        content.appendChild(video2);
-        if (stream.getAudioTracks().length) {
-          controls.appendChild(mute);
-          video2.muted = muted.checked;
-        }
-        video2.srcObject = stream;
-        video2.play();
-        frames.innerHTML = '';
-        stopbuttons.appendChild(snapshot);
-      } else {
-        content.appendChild(audio);
-        audio.srcObject = stream;
-        audio.play();
-      }
-      running = true;
-    } catch (err) {
-      if (location.protocol != "https:") {
-        message.innerHTML = `<p class='error'>${err}</p>
-          <p>getUserMedia and getDisplayMedia now require the site be loaded from an https URL</p>
-          <p>Reloading page in https in 10 seconds</p>`;
-        await wait(10000);
-        window.location.href = `https:${window.location.href.substring(window.location.protocol.length)}`;
-      } else {
-        message.innerHTML = `<p class='error'>${err}</p>`;
-      }
-      stopMedia2();
-    }
-  }
-    
-  async function startMedia(gum, constraints) {
-    stop.style.display = "block";
-    start.style.display = "none";
-    try {
-      const stream = await navigator.mediaDevices[gum](constraints);
-      message.innerHTML = "<p>Success!</p>";
-      if (stream.getVideoTracks().length) {
-        content.appendChild(video);
-        if (stream.getAudioTracks().length) {
-          controls.appendChild(mute);
-          video.muted = muted.checked;
-        }
-        video.srcObject = stream;
-        video.play();
-        frames.innerHTML = '';
-        stopbuttons.appendChild(snapshot);
-      } else {
-        content.appendChild(audio);
-        audio.srcObject = stream;
-        audio.play();
-      }
-      running = true;
-    } catch (err) {
-      if (location.protocol != "https:") {
-        message.innerHTML = `<p class='error'>${err}</p>
-          <p>getUserMedia and getDisplayMedia now require the site be loaded from an https URL</p>
-          <p>Reloading page in https in 10 seconds</p>`;
-        await wait(10000);
-        window.location.href = `https:${window.location.href.substring(window.location.protocol.length)}`;
-      } else {
-        message.innerHTML = `<p class='error'>${err}</p>`;
-      }
-      stopMedia();
-    }
-  }
-
-  function startSnapshot() {
-    capturing = !capturing;
-    if (capturing) {
-      captureImage();
-      snapshot.value = "Stop Snapshot";
-    } else {
-      snapshot.value = "Snapshot";
-    }
-  }
-
-  function captureImage() {
-    if (video.srcObject && capturing) {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      canvas.width  = video.videoWidth / 4;
-      canvas.height = video.videoHeight / 4;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      if (snapshots.unshift(canvas) > 4) {
-        snapshots.length = 4;
-      }
-      frames.innerHTML = '';
-      for (const snapshot of snapshots) {
-        frames.appendChild(snapshot);
-      }
-      setTimeout(captureImage, 2000);
-    }
-  }
-  </script>
+</script>
 </head>
 <body>
-  <div id="main">
-    <h2><b>getUserMedia / getDisplayMedia Test Page</b></h2>
-
-    <div id="gum_warn" style="display: none">
-      <font color="red">
-      <h4>getUserMedia is missing!</h4>
-      This page only works when loaded loaded <a href="https://mozilla.github.io/webrtc-landing/gum_test.html">via HTTPS</a> as getUserMedia() can only be accessed via HTTPS.<br><br>
-      </font>
-    </div>
-
-    <div id="startbuttons">
-      <input value="Camera" onclick="startVideo();" type="button">
-      <input value="Microphone" onclick="startAudio();" type="button">
-      <input value="Camera &amp; microphone" onclick="startAudioVideo();" type="button">
-      <input value="Screen capture" onclick="startScreen();" type="button">
-      <input value="Tab capture" onclick="startTab();" type="button">
-      <br>
-    </div>
-    <div id="images">
-       <div id="content"></div>
-       <div id="controls"></div>
-       <div id="frames"></div>
-    </div>
-    <div id="message"></div>
-    <div style="display: none;" id="stopbuttons">
-      <input value="Stop" onclick="stopMedia();" type="button">
-      <input value="Pause/Play" onclick="pauseMedia();" type="button">
-      <input id="snapshot" value="Snapshot" onclick="startSnapshot();" type="button">
-    </div>
-  </div>
-
+<button onclick="StartCapture1()">Start capture 1</button>
+<button onclick="StartCapture2()">Start capture 2</button>
+<br />
+<video id="video1"></video>
+<video id="video2"></video>
 </body>
 </html>
