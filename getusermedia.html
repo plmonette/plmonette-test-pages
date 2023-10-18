@@ -82,25 +82,10 @@
   const content = document.getElementById("content");
   const frames = document.getElementById("frames");
   const snapshot = document.getElementById("snapshot");
-  const fps = document.getElementById("fps");
-
-  const fps_range = document.getElementById("fps_range");
-  const fps_number = document.getElementById("fps_number");
-
-  fps_range.oninput = () => fps_number.value = fps_range.value;
-  fps_number.oninput = () => fps_range.value = fps_number.value;
 
   let saved_stream = null;
   let capturing = false;
   let running = false;
-
-  let fps_now = 0;
-  let fps_total = 0;
-  let last_fps_time;
-  let first_fps_time;
-  let last_fps_frames;
-  let first_fps_frames;
-  let fps_constraint;
 
   function startScreen() {
     startMedia2("getDisplayMedia", {video: true});
@@ -136,7 +121,6 @@
       if (mute.parentNode) {
         controls.removeChild(mute);
       }
-      fps.innerHTML = "";
       stopbuttons.removeChild(snapshot);
       snapshot.value = "Snapshot";
       frames.innerHTML = '';
@@ -163,7 +147,6 @@
       if (mute.parentNode) {
         controls.removeChild(mute);
       }
-      fps.innerHTML = "";
       stopbuttons.removeChild(snapshot);
       snapshot.value = "Snapshot";
       frames.innerHTML = '';
@@ -207,10 +190,6 @@
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   async function startMedia2(gum, constraints) {
-    if (constraints.video) {
-      const frameRate = +fps_number.value || undefined;
-      constraints.video = Object.assign(constraints.video, {frameRate});
-    }
     stop.style.display = "block";
     start.style.display = "none";
     try {
@@ -226,10 +205,6 @@
         video2.play();
         frames.innerHTML = '';
         stopbuttons.appendChild(snapshot);
-        first_fps_time = last_fps_time = new Date();
-        first_fps_frames = last_fps_frames = video2.mozPaintedFrames;
-        fps.innerHTML="FPS now:  0.0 , entire capture:  0.0";
-        setTimeout(get_fps, 2000);
       } else {
         content.appendChild(audio);
         audio.srcObject = stream;
@@ -251,10 +226,6 @@
   }
     
   async function startMedia(gum, constraints) {
-    if (constraints.video) {
-      const frameRate = +fps_number.value || undefined;
-      constraints.video = Object.assign(constraints.video, {frameRate});
-    }
     stop.style.display = "block";
     start.style.display = "none";
     try {
@@ -270,10 +241,6 @@
         video.play();
         frames.innerHTML = '';
         stopbuttons.appendChild(snapshot);
-        first_fps_time = last_fps_time = new Date();
-        first_fps_frames = last_fps_frames = video.mozPaintedFrames;
-        fps.innerHTML="FPS now:  0.0 , entire capture:  0.0";
-        setTimeout(get_fps, 2000);
       } else {
         content.appendChild(audio);
         audio.srcObject = stream;
@@ -291,19 +258,6 @@
         message.innerHTML = `<p class='error'>${err}</p>`;
       }
       stopMedia();
-    }
-  }
-
-  function get_fps() {
-    if (running) {
-      const now = new Date();
-      const frames = video.mozPaintedFrames;
-      fps_now = (frames - last_fps_frames)/((now - last_fps_time)/1000);
-      fps_total = (frames - first_fps_frames)/((now - first_fps_time)/1000);
-      fps.innerHTML= `FPS now: ${fps_now.toFixed(1)} , entire capture: ${fps_total.toFixed(1)}`;
-      last_fps_time = now;
-      last_fps_frames = frames;
-      setTimeout(get_fps, 1000);
     }
   }
 
@@ -355,15 +309,11 @@
       <input value="Screen capture" onclick="startScreen();" type="button">
       <input value="Tab capture" onclick="startTab();" type="button">
       <br>
-      <input id="fps_range" min="0" max="120" value="0" type="range">
-      <input id="fps_number" min="0" max="120" value="0" type="number">
-    <label for="fps_number">FPS desired (0 for default)</label>
     </div>
     <div id="images">
        <div id="content"></div>
        <div id="controls"></div>
        <div id="frames"></div>
-       <div id="fps"></div>
     </div>
     <div id="message"></div>
     <div style="display: none;" id="stopbuttons">
