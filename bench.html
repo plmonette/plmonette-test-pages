@@ -8,6 +8,9 @@
   <title>Scuffed Bench</title>
 
   <style type="text/css">
+    body {
+      background-color: #181818;
+    }
     .modal {
       display: block;
       position: fixed;
@@ -29,9 +32,8 @@
       width: 80%; /* Could be more or less, depending on screen size */
     }
 
-    .boss-list {
-      padding: 5px;
-      margin: 5px;
+    #raid-name-modal {
+      font-weight: bold;
     }
 
     #modal-file-selection {
@@ -43,6 +45,67 @@
     #prios-list {
       display: none;
     }
+
+    .boss-list {
+      float:left;
+      padding: 5px;
+      margin: 5px;
+      width: fit-content;
+    }
+
+    .character-name {
+      background-color: #282828;
+      padding: 2px;
+      margin: 2px;
+    }
+
+    .header {
+      color: #FFFFFF;
+      font-weight: bold;
+      font-size: 35;
+      text-decoration: underline;
+    }
+
+    .deathknight {
+      color: #C41E3A;
+    }
+
+    .druid {
+      color: #FF7C0A ;
+    }
+
+    .hunter {
+      color: #AAD372;
+    }
+
+    .mage {
+      color: #3FC7EB;
+    }
+
+    .paladin {
+      color: #F48CBA;
+    }
+
+    .priest {
+      color: #FFFFFF;
+    }
+
+    .rogue {
+      color: #FFF468;
+    }
+
+    .shaman {
+      color: #0070DD;
+    }
+
+    .warlock {
+      color: #8788EE;
+    }
+
+    .warrior {
+      color: #C69B6D;
+    }
+
   </style>
 
   <script type="text/javascript">
@@ -111,7 +174,13 @@
         let priority = csv_content[row_index];
         let new_priority = {}
 
-        new_priority.character_name = priority.character_name;
+        let character_info = {
+          name: priority.character_name,
+          class: priority.character_class,
+        };
+
+
+        new_priority.character_info = character_info;
         new_priority.instance_name = priority.instance_name;
         new_priority.item_name = priority.item_name;
         new_priority.sort_order = priority.sort_order;
@@ -136,14 +205,20 @@
       return result;
     }
 
+    function UniquefyByName(list) {
+      return list.filter(function({name}) {
+        return !this.has(name) && this.add(name);
+      }, new Set);
+    }
+
     function ParseInstancePrios(instance_prios) {
       // Build the guild roster while we're at it.
-      let roster = new Set();
+      let roster = [];
       let prios_by_boss_name = {}
       for (let prio_index in instance_prios) {
         let prio = instance_prios[prio_index];
 
-        roster.add(prio.character_name);
+        roster.push(prio.character_info);
 
         if (prio.received_at != "") {
           // Item is already received. skip.
@@ -156,30 +231,33 @@
         prios_by_boss_name[source_name] = prios_by_boss_name[source_name] || {};
         prios_by_boss_name[source_name][item_name] = prios_by_boss_name[source_name][item_name] || [];
 
-        let character_name_and_sort_order = {}
-        character_name_and_sort_order.character_name = prio.character_name;
-        character_name_and_sort_order.sort_order = prio.sort_order;
+        let character_info_and_sort_order = {}
+        character_info_and_sort_order.character_info = prio.character_info;
+        character_info_and_sort_order.sort_order = prio.sort_order;
 
-        prios_by_boss_name[source_name][item_name].push(character_name_and_sort_order);
+        prios_by_boss_name[source_name][item_name].push(character_info_and_sort_order);
       }
 
       // Before returning, sort every item priorities, and only keep the first.
 
       for (let boss_name in prios_by_boss_name) {
-        let character_names = [];
+        let character_infos = [];
         for (let item_name in prios_by_boss_name[boss_name]) {
           let prios = prios_by_boss_name[boss_name][item_name];
           prios.sort(function(lhs, rhs){
             return parseInt(lhs.sort_order) - parseInt(rhs.sort_order)
           });
-          character_names.push(prios[0].character_name);
+          character_infos.push(prios[0].character_info);
         }
 
-        character_names = [...new Set(character_names)];
-        prios_by_boss_name[boss_name] = character_names;
+        // Uniquefy characters needing multiple items from same boss.
+        character_infos = UniquefyByName(character_infos);
+        prios_by_boss_name[boss_name] = character_infos;
       }
 
-      guild_roster = [...roster];
+      // Uniquefy roster.
+      roster = UniquefyByName(roster);
+      guild_roster = roster;
 
       return prios_by_boss_name;
     }
@@ -188,16 +266,19 @@
       let bench_by_boss_name = {}
 
       for (let boss_name in prios_by_boss_name) {
-        priod_characters = new Set(prios_by_boss_name[boss_name]);
+        let priod_character_infos = prios_by_boss_name[boss_name];
+        let priod_character_names = new Set(priod_character_infos.map(info => info.name));
+
+        new Set(prios_by_boss_name[boss_name]);
         bench_characters = [];
         for (let index in roster) {
-          let character_name = roster[index];
+          let character_info = roster[index];
           // Skip prio'd characters.
-          if (priod_characters.has(character_name)) {
+          if (priod_character_names.has(character_info.name)) {
             continue;
           }
 
-          bench_characters.push(character_name);
+          bench_characters.push(character_info);
         }
 
         bench_by_boss_name[boss_name] = bench_characters;
@@ -206,17 +287,33 @@
       return bench_by_boss_name;
     }
 
-    async function OnFileSelectionNextClicked() {
-      console.log("OnFileSelectionNextClicked");
+    function ConvertTimestampToReadableTime(timestamp) {
+      let full_seconds = timestamp/1000;
 
+      let hours = Math.floor(full_seconds/60/60).toString();
+      let minutes = Math.floor(full_seconds/60 - hours*60).toString();
+      let seconds = Math.floor(full_seconds - hours*60*60 - minutes*60).toString();
+
+      return hours + " hours, " + minutes + " minutes and " + seconds + " seconds ago";
+    }
+
+    async function OnFileSelectionNextClicked() {
       // Check if there is a file.
       let file_input = document.getElementById("file-input");
       let file = file_input.files[0];
       if (!file) {
-        console.log("No file selected");
+        window.alert("No file selected");
         return;
       }
-      console.log("Has file!");
+
+      // Show the file name in the modal.
+      let raid_name_modal_element = document.getElementById("raid-name-modal");
+
+      // Time is in milliseconds
+      let time_since_last_modified = ConvertTimestampToReadableTime(Date.now() - file.lastModified);
+
+
+      raid_name_modal_element.innerHTML = file.name + ", created " + time_since_last_modified;
 
       // Load the file into a variable.
       let file_contents = await file.text();
@@ -240,9 +337,12 @@
       document.getElementById("modal-raid-selection").style.display = "block";
     }
 
+    function CharacterClassToCSSClassName(character_class) {
+      return character_class.replaceAll(" ", "").toLowerCase();
+    }
+
     function OnRaidSelectionNextClicked() {
       const selected_raid = document.getElementById("raid-names-select").value;
-      console.log(selected_raid);
 
       let prios = prios_by_instance_name[selected_raid];
 
@@ -250,26 +350,31 @@
 
       // Hide modal.
       document.getElementById("import-modal").style.display = "none";
-      document.getElementById("prios-list").style.display = "block";
+      document.getElementById("prios-list").style.display = "inline";
 
-      console.log("Roster: ");
-      console.log(guild_roster);
 
       // Now invert. Create an array for each boss that contains members from `guild_roster` that isn't prio'd.
-      console.log(prios_by_boss_name);
       let bench_by_boss_name = GetBenchByBossName(prios_by_boss_name, guild_roster);
-      console.log(bench_by_boss_name);
 
-      // Create the table.
+      // Create the lists.
       let div_element = document.getElementById("prios-list");
 
       let inner_div_element = document.createElement("div");
       inner_div_element.classList.toggle("boss-list");
       div_element.appendChild(inner_div_element);
 
-      inner_div_element.innerHTML += "Roster (" + guild_roster.length.toString() + "):<br />";
+      let header_element = document.createElement("div");
+      inner_div_element.appendChild(header_element);
+      header_element.classList.toggle("header");
+      header_element.innerHTML = "Roster (" + guild_roster.length.toString() + ")";
+
+
       for (let index in guild_roster) {
-        inner_div_element.innerHTML += guild_roster[index] + ", ";
+        let character_element = document.createElement("div");
+        inner_div_element.appendChild(character_element);
+        character_element.classList.toggle(CharacterClassToCSSClassName(guild_roster[index].class));
+        character_element.classList.toggle("character-name");
+        character_element.innerHTML = guild_roster[index].name;
       }
 
       for (let boss_name in bench_by_boss_name) {
@@ -278,15 +383,21 @@
         inner_div_element.classList.toggle("boss-list");
         div_element.appendChild(inner_div_element);
 
-        let text = boss_name + ":<br />";
+
+        let boss_element = document.createElement("div");
+        inner_div_element.appendChild(boss_element);
+        boss_element.classList.toggle("header");
+        boss_element.innerHTML = boss_name;
+
         boss_name_prios = bench_by_boss_name[boss_name];
 
         for (index in boss_name_prios) {
-          let character_name = boss_name_prios[index];
-          text += character_name + ", ";
+          let character_element = document.createElement("div");
+          inner_div_element.appendChild(character_element);
+          character_element.classList.toggle(CharacterClassToCSSClassName(boss_name_prios[index].class));
+          character_element.classList.toggle("character-name");
+          character_element.innerHTML = boss_name_prios[index].name;
         }
-
-        inner_div_element.innerHTML += text;
       }
     }
 
@@ -297,14 +408,14 @@
 <body>
   <div id="import-modal" class="modal">
     <div id="modal-file-selection" class="modal-content">
+      <p>Select the exported .csv file containing prios.</p>
       <input type="file" id="file-input" />
-      <button id="cancel-btn-1">Cancel></button>
       <button id="file-selection-next" onclick="OnFileSelectionNextClicked()">Next</button>
     </div>
     <div id="modal-raid-selection" class="modal-content">
+      <p>Selected <span id="raid-name-modal">s</span>. Now select a raid.</p>
       <select name="raid-names" id="raid-names-select">
       </select>
-      <button id="cancel-btn-2">Cancel></button>
       <button id="file-selection-next" onclick="OnRaidSelectionNextClicked()">Next</button>
     </div>
   </div>
