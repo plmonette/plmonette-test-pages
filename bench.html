@@ -1,0 +1,315 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Scuffed Bench</title>
+
+  <style type="text/css">
+    .modal {
+      display: block;
+      position: fixed;
+      z-index: 1;  /* Stays on top */
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rbg(0, 0, 0); /* Fallback color */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto; /* 15% from the top and centered */
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%; /* Could be more or less, depending on screen size */
+    }
+
+    .boss-list {
+      padding: 5px;
+      margin: 5px;
+    }
+
+    #modal-file-selection {
+      display: block;
+    }
+    #modal-raid-selection {
+      display: none;
+    }
+    #prios-list {
+      display: none;
+    }
+  </style>
+
+  <script type="text/javascript">
+    function parseCSV(str) {
+      const arr = [];
+      let quote = false;  // 'true' means we're inside a quoted field
+
+      // Iterate over each character, keep track of current row and column (of the returned array)
+      for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+          let cc = str[c], nc = str[c+1];        // Current character, next character
+          arr[row] = arr[row] || [];             // Create a new row if necessary
+          arr[row][col] = arr[row][col] || '';   // Create a new column (start with empty string) if necessary
+
+          // If the current character is a quotation mark, and we're inside a
+          // quoted field, and the next character is also a quotation mark,
+          // add a quotation mark to the current column and skip the next character
+          if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+
+          // If it's just one quotation mark, begin/end quoted field
+          if (cc == '"') { quote = !quote; continue; }
+
+          // If it's a comma and we're not in a quoted field, move on to the next column
+          if (cc == ',' && !quote) { ++col; continue; }
+
+          // If it's a newline (CRLF) and we're not in a quoted field, skip the next character
+          // and move on to the next row and move to column 0 of that new row
+          if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+
+          // If it's a newline (LF or CR) and we're not in a quoted field,
+          // move on to the next row and move to column 0 of that new row
+          if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+          if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+
+          // Otherwise, append the current character to the current column
+          arr[row][col] += cc;
+      }
+      return arr;
+    }   
+
+    function parseCSVWithHeader(str) {
+      let parsed_csv = parseCSV(str);
+
+      // First row is header.
+      const header = parsed_csv[0];
+
+      parsed_csv.shift();
+
+      const arr = [];
+      for (row_index in parsed_csv) {
+        let new_row_object = {};
+        row = parsed_csv[row_index];
+        for (column_index in row) {
+          new_row_object[header[column_index]] = row[column_index];
+        }
+        arr[row_index] = new_row_object;
+      }
+
+      return arr;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+    });
+
+    function FilterProperties(csv_content) {
+      for (row_index in csv_content) {
+        let priority = csv_content[row_index];
+        let new_priority = {}
+
+        new_priority.character_name = priority.character_name;
+        new_priority.instance_name = priority.instance_name;
+        new_priority.item_name = priority.item_name;
+        new_priority.sort_order = priority.sort_order;
+        new_priority.source_name = priority.source_name;
+        new_priority.received_at = priority.received_at;
+
+        csv_content[row_index] = new_priority;
+      }
+      return csv_content;
+    }
+
+    function LoadPrios(csv_content) {
+      const result = {}
+      // Isolate by instance_name. Drop unwanted properties.
+      for (row_index in csv_content) {
+        let priority = csv_content[row_index];
+
+        result[priority.instance_name] = result[priority.instance_name] || [];
+        result[priority.instance_name].push(priority);
+      }
+
+      return result;
+    }
+
+    function ParseInstancePrios(instance_prios) {
+      // Build the guild roster while we're at it.
+      let roster = new Set();
+      let prios_by_boss_name = {}
+      for (let prio_index in instance_prios) {
+        let prio = instance_prios[prio_index];
+
+        roster.add(prio.character_name);
+
+        if (prio.received_at != "") {
+          // Item is already received. skip.
+          continue;
+        }
+
+        let item_name = prio.item_name;
+        let source_name = prio.source_name;
+
+        prios_by_boss_name[source_name] = prios_by_boss_name[source_name] || {};
+        prios_by_boss_name[source_name][item_name] = prios_by_boss_name[source_name][item_name] || [];
+
+        let character_name_and_sort_order = {}
+        character_name_and_sort_order.character_name = prio.character_name;
+        character_name_and_sort_order.sort_order = prio.sort_order;
+
+        prios_by_boss_name[source_name][item_name].push(character_name_and_sort_order);
+      }
+
+      // Before returning, sort every item priorities, and only keep the first.
+
+      for (let boss_name in prios_by_boss_name) {
+        let character_names = [];
+        for (let item_name in prios_by_boss_name[boss_name]) {
+          let prios = prios_by_boss_name[boss_name][item_name];
+          prios.sort(function(lhs, rhs){
+            return parseInt(lhs.sort_order) - parseInt(rhs.sort_order)
+          });
+          character_names.push(prios[0].character_name);
+        }
+
+        character_names = [...new Set(character_names)];
+        prios_by_boss_name[boss_name] = character_names;
+      }
+
+      guild_roster = [...roster];
+
+      return prios_by_boss_name;
+    }
+
+    function GetBenchByBossName(prios_by_boss_name, roster) {
+      let bench_by_boss_name = {}
+
+      for (let boss_name in prios_by_boss_name) {
+        priod_characters = new Set(prios_by_boss_name[boss_name]);
+        bench_characters = [];
+        for (let index in roster) {
+          let character_name = roster[index];
+          // Skip prio'd characters.
+          if (priod_characters.has(character_name)) {
+            continue;
+          }
+
+          bench_characters.push(character_name);
+        }
+
+        bench_by_boss_name[boss_name] = bench_characters;
+      }
+
+      return bench_by_boss_name;
+    }
+
+    async function OnFileSelectionNextClicked() {
+      console.log("OnFileSelectionNextClicked");
+
+      // Check if there is a file.
+      let file_input = document.getElementById("file-input");
+      let file = file_input.files[0];
+      if (!file) {
+        console.log("No file selected");
+        return;
+      }
+      console.log("Has file!");
+
+      // Load the file into a variable.
+      let file_contents = await file.text();
+      let csv_contents = parseCSVWithHeader(file_contents);
+      let filtered_csv_contents = FilterProperties(csv_contents);
+      prios_by_instance_name = LoadPrios(filtered_csv_contents);
+
+      // Add the options to the dropdown list.
+      let select_element = document.getElementById("raid-names-select");
+      for (const instance_name in prios_by_instance_name) {
+        var option = document.createElement("option");
+        option.value = instance_name;
+        option.text = instance_name;
+        select_element.appendChild(option);
+      }
+
+      // Hide file selection modal.
+      document.getElementById("modal-file-selection").style.display = "none";
+
+      // Show raid selection modal.
+      document.getElementById("modal-raid-selection").style.display = "block";
+    }
+
+    function OnRaidSelectionNextClicked() {
+      const selected_raid = document.getElementById("raid-names-select").value;
+      console.log(selected_raid);
+
+      let prios = prios_by_instance_name[selected_raid];
+
+      let prios_by_boss_name = ParseInstancePrios(prios);
+
+      // Hide modal.
+      document.getElementById("import-modal").style.display = "none";
+      document.getElementById("prios-list").style.display = "block";
+
+      console.log("Roster: ");
+      console.log(guild_roster);
+
+      // Now invert. Create an array for each boss that contains members from `guild_roster` that isn't prio'd.
+      console.log(prios_by_boss_name);
+      let bench_by_boss_name = GetBenchByBossName(prios_by_boss_name, guild_roster);
+      console.log(bench_by_boss_name);
+
+      // Create the table.
+      let div_element = document.getElementById("prios-list");
+
+      let inner_div_element = document.createElement("div");
+      inner_div_element.classList.toggle("boss-list");
+      div_element.appendChild(inner_div_element);
+
+      inner_div_element.innerHTML += "Roster (" + guild_roster.length.toString() + "):<br />";
+      for (let index in guild_roster) {
+        inner_div_element.innerHTML += guild_roster[index] + ", ";
+      }
+
+      for (let boss_name in bench_by_boss_name) {
+
+        let inner_div_element = document.createElement("div");
+        inner_div_element.classList.toggle("boss-list");
+        div_element.appendChild(inner_div_element);
+
+        let text = boss_name + ":<br />";
+        boss_name_prios = bench_by_boss_name[boss_name];
+
+        for (index in boss_name_prios) {
+          let character_name = boss_name_prios[index];
+          text += character_name + ", ";
+        }
+
+        inner_div_element.innerHTML += text;
+      }
+    }
+
+  </script>
+
+</head>
+
+<body>
+  <div id="import-modal" class="modal">
+    <div id="modal-file-selection" class="modal-content">
+      <input type="file" id="file-input" />
+      <button id="cancel-btn-1">Cancel></button>
+      <button id="file-selection-next" onclick="OnFileSelectionNextClicked()">Next</button>
+    </div>
+    <div id="modal-raid-selection" class="modal-content">
+      <select name="raid-names" id="raid-names-select">
+      </select>
+      <button id="cancel-btn-2">Cancel></button>
+      <button id="file-selection-next" onclick="OnRaidSelectionNextClicked()">Next</button>
+    </div>
+  </div>
+  <div id="prios-list">
+
+  </div>
+</body>
+</html>
