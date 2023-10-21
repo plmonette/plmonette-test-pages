@@ -291,10 +291,8 @@
       let full_seconds = timestamp/1000;
 
       let hours = Math.floor(full_seconds/60/60).toString();
-      let minutes = Math.floor(full_seconds/60 - hours*60).toString();
-      let seconds = Math.floor(full_seconds - hours*60*60 - minutes*60).toString();
 
-      return hours + " hours, " + minutes + " minutes and " + seconds + " seconds ago";
+      return hours + " hours ago";
     }
 
     async function OnFileSelectionNextClicked() {
