@@ -105,7 +105,6 @@
     .warrior {
       color: #C69B6D;
     }
-
   </style>
 
   <script type="text/javascript">
@@ -168,6 +167,53 @@
 
     document.addEventListener("DOMContentLoaded", () => {
     });
+
+    function GetBossSortOrder(instance_name) {
+      if (instance_name == "Icecrown Citadel H25") {
+        return {
+          "Marrowgar": null,
+          "Deathwhisper": null,
+          "Gunship": null,
+          "Saurfang": null,
+
+          "Festergut": null,
+          "Rotface": null,
+          "Putricide": null,
+
+          "Council": null,
+          "Lana'thel": null,
+
+          "Valithria": null,
+          "Sindragosa": null,
+
+          "Lich King": null,
+        };
+      } else if (instance_name == "Trial of the Crusader H25") {
+        return {
+          "Icehowl": null,
+          "Jaraxxus": null,
+          "Cache": null,
+          "Val'kyr": null,
+          "Anub'arak": null,
+        };
+      }
+      return null;
+    }
+
+    function GetValidatedBossSortOrder(instance_name, all_bosses) {
+      let ordering = GetBossSortOrder(instance_name);
+      if (!ordering) return null;
+
+      // Append bosses in |instance_name| not contained in |ordering|.
+
+      for (property in all_bosses) {
+        if (!Object.hasOwn(ordering, property)) {
+          ordering[property] = null;
+        }
+      }
+
+      return ordering;
+    }
 
     function FilterProperties(csv_content) {
       for (row_index in csv_content) {
@@ -375,8 +421,11 @@
         character_element.innerHTML = guild_roster[index].name;
       }
 
-      for (let boss_name in bench_by_boss_name) {
+      let ordering = GetValidatedBossSortOrder(selected_raid, bench_by_boss_name);
+      // Make sure ordering contains all the same bosses as 
+      if (!ordering) ordering = bench_by_boss_name;
 
+      for (let boss_name in ordering) {
         let inner_div_element = document.createElement("div");
         inner_div_element.classList.toggle("boss-list");
         div_element.appendChild(inner_div_element);
@@ -406,8 +455,8 @@
 <body>
   <div id="import-modal" class="modal">
     <div id="modal-file-selection" class="modal-content">
-      <p>Select the exported .csv file containing prios.</p>
-      <input type="file" id="file-input" />
+      <p>Select the .csv file containing prios exported from thatsmybis.com.</p>
+      <input type="file" accept="text/csv" id="file-input" />
       <button id="file-selection-next" onclick="OnFileSelectionNextClicked()">Next</button>
     </div>
     <div id="modal-raid-selection" class="modal-content">
