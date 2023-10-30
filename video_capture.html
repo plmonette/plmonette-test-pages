@@ -3,34 +3,17 @@
 <head>
   <script>
 
-async function startCaptureChild(displayMediaOptions) {
-  navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
+async function StartCaptureChild() {
+  navigator.mediaDevices.getDisplayMedia({})
     .then((stream) => {
-      /*let video = document.getElementById("video1");
-      video.srcObject = stream;
-      video.play();*/
-/*
-      var video_element = child_frame.contentWindow.document.getElementById("video_element");
-      video_element.srcObject = stream;
-      video_element.play();
-*/
-
       var own_video_element = document.getElementById("video_element");
       own_video_element.srcObject = stream;
       own_video_element.play();
-
     })
     .catch((err) => {
       console.error(`Error: ${err}`);
     });
 }
-
-function StartCaptureChild() {
-  startCaptureChild({});
-}
-
-
-
   </script>
 </head>
   <body>
