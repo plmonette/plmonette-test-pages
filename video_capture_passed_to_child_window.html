@@ -1,0 +1,38 @@
+<!-- This (and video_capture_child.html) is a page that passes the stream to a child frame in the same renderer -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+video {
+  width: 400px;
+  height: 300px;
+  background-color: blue;
+}
+iframe {
+  width: 400px;
+  height: 300px;
+}
+</style>
+<script>
+async function StartCapture() {
+  navigator.mediaDevices.getDisplayMedia({})
+    .then((stream) => {
+      let w = window.open("video_capture_child_receiver.html");
+      w.addEventListener('load', ()=>{
+        let video_element = w.document.getElementById("video_element");
+        video_element.srcObject = stream;
+        video_element.play();
+      });
+    })
+    .catch((err) => {
+      console.error(`Error: ${err}`);
+    });
+}
+</script>
+</head>
+<body>
+<button onclick="StartCapture()">Start capture in another window</button>
+<br />
+</body>
+</html>
