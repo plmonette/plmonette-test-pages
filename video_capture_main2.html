@@ -1,0 +1,58 @@
+<!-- This (and video_capture_child.html) is a page that passes the stream to a child frame in the same renderer -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+video {
+  width: 400px;
+  height: 300px;
+  background-color: blue;
+}
+iframe {
+  width: 400px;
+  height: 300px;
+}
+</style>
+<script>
+async function startCapture(displayMediaOptions) {
+  navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
+    .then((stream) => {
+      var child_frame = document.getElementById("child_frame");
+      console.log(child_frame);
+      /*let video = document.getElementById("video1");
+      video.srcObject = stream;
+      video.play();*/
+      console.log(child_frame.contentWindow);
+/*
+      var video_element = child_frame.contentWindow.document.getElementById("video_element");
+      video_element.srcObject = stream;
+      video_element.play();
+*/
+
+      var own_video_element = document.getElementById("video_element");
+      own_video_element.srcObject = stream;
+      own_video_element.play();
+
+    })
+    .catch((err) => {
+      console.error(`Error: ${err}`);
+    });
+}
+
+function StartCapture() {
+  startCapture({});
+}
+
+
+
+</script>
+</head>
+<body>
+<button onclick="StartCapture()">Start capture</button>
+<br />
+<video id="video_element"></video>
+
+<iframe id="child_frame", src="video_capture_child2.html"></iframe>
+</body>
+</html>
