@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineup</title>
+  <style>
+    button {
+      font-size: 20px;
+      padding:2px;
+      margin:2px;
+    }
+@media (max-width: 500px) {
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  .topnav {
+    background-color: #333;
+    width: 100%;
+    color: #f2f2f2;
+  }
+  input {
+    height: 25px;
+  }
+  .topnav div {
+    float: left;
+    text-align: center;
+    text-decoration: none;
+    font-size: 35px;
+    width: 50%;
+    heigh: 50px;
+  }
+  .topnav div:hover {
+    background-color: #ddd;
+    color: black;
+  }
+  .highlight {
+    background-color: #ddd;
+    color: black;
+  }
+  .hidden {
+    display: none;
+  }
+  #c {
+    display: block;
+    padding:0;
+    margin: auto;
+  }
+  #rink-tab {
+    text-align: center;
+  }
+  #contents {
+    flex-grow: 1;
+  }
+}
+@media (min-width: 500px) {
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  .topnav {
+    display:none;
+  }
+  input {
+    height: 25px;
+  }
+  #c {
+    display: block;
+    padding:0;
+    margin: 30px;
+  }
+  #rink-tab {
+    text-align: center;
+  }
+  #contents {
+    flex-grow: 1;
+    display:flex;
+  }
+}
+</style>
+  <script>
+
+    function doCopyToClipboard() {
+      let canvas = document.getElementById("c");
+      canvas.toBlob(function(blob) { 
+          const item = new ClipboardItem({ "image/png": blob });
+          navigator.clipboard.write([item]).then(()=>{
+            alert("Copied to clipboard!");
+          }); 
+      });
+    }
+    function deactivateEditTab() {
+      const edit_tab_element = document.getElementById("edit-tab");
+      edit_tab_element.classList.add("hidden");
+
+      const edit_topnav_element = document.getElementById("topnav-edit");
+      edit_topnav_element.classList.remove("highlight");
+    }
+    function deactivateRinkTab() {
+      const edit_tab_element = document.getElementById("rink-tab");
+      edit_tab_element.classList.add("hidden");
+
+      const edit_topnav_element = document.getElementById("topnav-rink");
+      edit_topnav_element.classList.remove("highlight");
+    }
+
+    function activateEditTab() {
+      deactivateRinkTab();
+
+      const edit_tab_element = document.getElementById("edit-tab");
+      edit_tab_element.classList.remove("hidden");
+
+      const edit_topnav_element = document.getElementById("topnav-edit");
+      edit_topnav_element.classList.add("highlight");
+    }
+
+    function activateRinkTab() {
+      deactivateEditTab();
+
+      const rink_tab_element = document.getElementById("rink-tab");
+      rink_tab_element.classList.remove("hidden");
+
+      const rink_topnav_element = document.getElementById("topnav-rink");
+      rink_topnav_element.classList.add("highlight");
+      DrawRink();
+    }
+
+    // Ensure input is always firstElementChild.
+    function getNameFromElementId(id) {
+      var value =  document.getElementById(id).firstElementChild.value;
+      if (value == "") {
+        value = document.getElementById(id).firstElementChild.placeholder;
+      }
+      return value;
+    }
+ 
+    function DrawPerimeter(ctx) {
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "black";
+      let kCornerRadiusPlusLine = kCornerRadius +2;
+      ctx.beginPath();
+      ctx.arc(/*x=*/kCornerRadiusPlusLine, /*y=*/kCornerRadiusPlusLine, kCornerRadius, Math.PI, 1.5 * Math.PI);
+      ctx.arc(/*x=*/kWidth-kCornerRadiusPlusLine, /*y=*/kCornerRadiusPlusLine, kCornerRadius, 1.5* Math.PI, 0);
+      ctx.arc(/*x=*/kWidth-kCornerRadiusPlusLine, /*y=*/kHeight-kCornerRadiusPlusLine, kCornerRadius, 0, .5 * Math.PI);
+      ctx.arc(/*x=*/kCornerRadiusPlusLine, /*y=*/kHeight-kCornerRadiusPlusLine, kCornerRadius, .5* Math.PI, Math.PI);
+      ctx.arc(/*x=*/kCornerRadiusPlusLine, /*y=*/kCornerRadiusPlusLine, kCornerRadius, Math.PI, 1.5 * Math.PI);
+      ctx.stroke();
+ 
+      ctx.fillStyle = "#CFF2FF";
+      ctx.fill();
+    }
+ 
+    function DrawLines(ctx) {
+      // Middle red line.
+      const kRedLineHeight = kHeight/2;
+      ctx.strokeStyle = "red";
+ 
+      ctx.beginPath();
+      ctx.moveTo(2, kRedLineHeight);
+      ctx.lineTo(kWidth-2, kRedLineHeight);
+      ctx.stroke();
+ 
+      // 2 blue lines.
+      const kBlueLineDeltaFromRed = kHeight/7;
+ 
+      const kBlueLineHeight1 = kRedLineHeight - kBlueLineDeltaFromRed;
+      const kBlueLineHeight2 = kRedLineHeight + kBlueLineDeltaFromRed;
+      ctx.strokeStyle = "blue";
+ 
+      ctx.beginPath();
+      ctx.moveTo(2, kBlueLineHeight1);
+      ctx.lineTo(kWidth-2, kBlueLineHeight1);
+      ctx.stroke();
+ 
+      ctx.beginPath();
+      ctx.moveTo(2, kBlueLineHeight2);
+      ctx.lineTo(kWidth-2, kBlueLineHeight2);
+      ctx.stroke();
+ 
+      // 2 red goal lines.
+      const kRedGoalLineHeight1 = kGoalLineHeight;
+      const kRedGoalLineHeight2 = kHeight - kGoalLineHeight;
+      ctx.strokeStyle = "red";
+ 
+      const kWidthToCut = 6;
+
+      ctx.beginPath();
+      ctx.moveTo(kWidthToCut, kRedGoalLineHeight1);
+      ctx.lineTo(kWidth-kWidthToCut, kRedGoalLineHeight1);
+      ctx.stroke();
+ 
+      ctx.beginPath();
+      ctx.moveTo(kWidthToCut, kRedGoalLineHeight2);
+      ctx.lineTo(kWidth-kWidthToCut, kRedGoalLineHeight2);
+      ctx.stroke();
+    }
+ 
+    function DrawGoalCrease(ctx) {
+      const kWidthCenter = kWidth/2;
+ 
+      ctx.beginPath();
+      ctx.arc(kWidthCenter, kGoalLineHeight, kGoalCreaseRadius, 0, Math.PI);
+      ctx.stroke();
+      ctx.fillStyle = "blue";
+      ctx.fill();
+ 
+      ctx.beginPath();
+      ctx.arc(kWidthCenter, kHeight-kGoalLineHeight, kGoalCreaseRadius, Math.PI, 0);
+      ctx.stroke();
+      ctx.fillStyle = "blue";
+      ctx.fill();
+    }
+ 
+    function DrawFaceoffSpot(ctx, x, y) {
+      ctx.beginPath();
+      ctx.fillStyle = "red";
+      ctx.arc(x, y, 10, 0, 2 * Math.PI, false);
+      ctx.fill();
+    }
+ 
+    function DrawFaceoffCircle(ctx, x, y, radius, color) {
+      ctx.beginPath();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = color;
+      ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+      ctx.stroke();
+ 
+      DrawFaceoffSpot(ctx, x, y);
+    }
+ 
+    function DrawFaceoffCircles(ctx) {
+      const kCenterWidth = kWidth/2;
+      const kCenterHeight = kHeight/2;
+
+      // Center.
+      DrawFaceoffCircle(ctx, kCenterWidth, kCenterHeight, kCircleRadius, "red");
+
+      const kWidthDeltaFromCenter = kCenterWidth*5/9;
+      const kHeightDeltaFromCenter = kHeight*1/3;
+
+      const kLeftAlignement = kCenterWidth - kWidthDeltaFromCenter;
+      const kRightAlignement = kCenterWidth + kWidthDeltaFromCenter;
+      const kTopAlignement = kCenterHeight - kHeightDeltaFromCenter;
+      const kBottomAlignement = kCenterHeight + kHeightDeltaFromCenter;
+
+      // Top left.
+      DrawFaceoffCircle(ctx, kLeftAlignement, kTopAlignement, kCircleRadius, "red");
+      // Top right.
+      DrawFaceoffCircle(ctx, kRightAlignement, kTopAlignement, kCircleRadius, "red");
+      // Bottom left.
+      DrawFaceoffCircle(ctx, kLeftAlignement, kBottomAlignement, kCircleRadius, "red");
+      // Bottom right.
+      DrawFaceoffCircle(ctx, kRightAlignement, kBottomAlignement, kCircleRadius, "red");
+    }
+ 
+    function DrawOtherFaceoffSpots(ctx) {
+      const kCenterWidth = kWidth/2;
+      const kCenterHeight = kHeight/2;
+
+      // Center.
+      // DrawFaceoffCircle(ctx, kCenterWidth, kCenterHeight, kCircleRadius, "red");
+
+      const kWidthDeltaFromCenter = 120;
+      const kHeightDeltaFromCenter = 80;
+
+      const kLeftAlignement = kCenterWidth - kWidthDeltaFromCenter;
+      const kRightAlignement = kCenterWidth + kWidthDeltaFromCenter;
+      const kTopAlignement = kCenterHeight - kHeightDeltaFromCenter;
+      const kBottomAlignement = kCenterHeight + kHeightDeltaFromCenter;
+
+      // Top left.
+      DrawFaceoffSpot(ctx, kLeftAlignement, kTopAlignement);
+      // Top right.
+      DrawFaceoffSpot(ctx, kRightAlignement, kTopAlignement);
+      // Bottom left.
+      DrawFaceoffSpot(ctx, kLeftAlignement, kBottomAlignement);
+      // Bottom right.
+      DrawFaceoffSpot(ctx, kRightAlignement, kBottomAlignement);
+    }
+
+    function DrawStroked(ctx, text, x, y, color, fontSize) {
+      ctx.font = fontSize.toString() + "px sans-serif";
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 5;
+      ctx.lineJoin="miter";
+      ctx.miterLimit=2;
+      ctx.strokeText(text, x, y);
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    }
+
+    function DrawPlayerNames(ctx) {
+      ctx.textAlign = "center";
+
+      const kCenterWidth = kWidth/2;
+      const kCenterHeight = kHeight/2;
+
+      const kCenterOfLeftThird = kWidth/3;
+      const kCenterOfLeftHalf = kWidth/4.5;
+
+      // Height divided by 7.
+
+      const kFirstALineHeightDelta = 0.3*kHeight/7;
+      const kSecondALineHeightDelta = 0.65*kHeight/7;
+
+      const kFirstDLineHeightDelta = 1.7*kHeight/7;
+      const kSecondDLineHeightDelta = 2.1*kHeight/7;
+
+      const kPlayerNamePositions = {
+        "j_1_1": [kCenterWidth - kCenterOfLeftThird, kCenterHeight - kFirstALineHeightDelta],
+        "j_1_2": [kCenterWidth, kCenterHeight -kFirstALineHeightDelta],
+        "j_1_3": [kCenterWidth + kCenterOfLeftThird, kCenterHeight - kFirstALineHeightDelta],
+
+        "j_1_4": [kCenterWidth - kCenterOfLeftThird, kCenterHeight - kSecondALineHeightDelta],
+        "j_1_5": [kCenterWidth, kCenterHeight -kSecondALineHeightDelta],
+        "j_1_6": [kCenterWidth + kCenterOfLeftThird, kCenterHeight - kSecondALineHeightDelta],
+
+        "j_1_7": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight - kFirstDLineHeightDelta],
+        "j_1_8": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight - kFirstDLineHeightDelta],
+
+        "j_1_9": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight - kSecondDLineHeightDelta],
+        "j_1_10": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight - kSecondDLineHeightDelta],
+
+        "j_1_11": [kCenterWidth, kCenterHeight - 4*kHeight/10],
+      }
+
+      for (const [key, value] of Object.entries(kPlayerNamePositions)) {
+        const name = getNameFromElementId(key);
+        DrawStroked(ctx, name, value[0], value[1], "#82b1ed", 16);
+      }
+      const kPlayerNamePositions2 = {
+        "j_2_1": [kCenterWidth - kCenterOfLeftThird, kCenterHeight + kFirstALineHeightDelta],
+        "j_2_2": [kCenterWidth, kCenterHeight + kFirstALineHeightDelta],
+        "j_2_3": [kCenterWidth + kCenterOfLeftThird, kCenterHeight + kFirstALineHeightDelta],
+
+        "j_2_4": [kCenterWidth - kCenterOfLeftThird, kCenterHeight + kSecondALineHeightDelta],
+        "j_2_5": [kCenterWidth, kCenterHeight + kSecondALineHeightDelta],
+        "j_2_6": [kCenterWidth + kCenterOfLeftThird, kCenterHeight + kSecondALineHeightDelta],
+
+        "j_2_7": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight + kFirstDLineHeightDelta],
+        "j_2_8": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight + kFirstDLineHeightDelta],
+
+        "j_2_9": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight + kSecondDLineHeightDelta],
+        "j_2_10": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight + kSecondDLineHeightDelta],
+
+        "j_2_11": [kCenterWidth, kCenterHeight + 4*kHeight/10],
+      };
+
+      for (const [key, value] of Object.entries(kPlayerNamePositions2)) {
+        const name = getNameFromElementId(key);
+        DrawStroked(ctx, name, value[0], value[1], "white", 16);
+      }
+    }
+
+    function ClearNames() {
+      if (confirm("Are you sure you want to clear all names?") != true)
+        return;
+
+      for (let team_idx = 1; team_idx <= 2; team_idx++) {
+        for (let i = 1; i <= 11; i++) {
+          const str = "j_" + team_idx + "_" + i;
+          setCookie(str, "", -1);
+
+          document.getElementById(str).firstElementChild.value = "";
+        }
+      }
+
+    }
+
+    addEventListener("load", () => {
+      // Read cookies.
+      let cookies = document.cookie;
+      console.log(cookies);
+
+      const player_elements = document.getElementsByClassName("my-draggable");
+      for (const player_element of player_elements) {
+        player_element.firstElementChild.value = getCookie(player_element.id);
+        player_element.firstElementChild.addEventListener("keyup", ()=>{
+          OnPlayerNamesChanged();
+        });
+      }
+
+      InitializeDimensions();
+    });
+    addEventListener("resize", () => {
+      InitializeDimensions();
+    });
+ 
+    function InitializeDimensions() {
+/*
+      Most North American rinks follow the National Hockey League (NHL) specifications of 200 by 85 feet (60.96 m × 25.9 m) with a corner radius of 28 feet (8.5 m).[3] Each goal line is 11 feet (3.4 m) from the end boards. NHL blue lines are 75 feet (22.9 m) from the end boards and 50 feet (15.2 m) apart.[4] The 13.6 ft difference in width from the international standard represents a significant difference in width-to-length ratio on the ice.
+*/
+      // Get size of contents.
+      const contents_element = document.getElementById("contents");
+
+      console.log("contents size: " + contents_element.offsetWidth + ", " + contents_element.offsetHeight);
+
+      let canvas = document.getElementById("c");
+
+      // Only change canvas size on mobile.
+      let is_mobile_match = window.matchMedia("(max-width: 500px)");
+      if (is_mobile_match.matches) {
+        canvas.width = contents_element.offsetWidth;
+        canvas.height = contents_element.offsetHeight;
+      } else {
+        canvas.width = 400;
+        canvas.height = 800;
+      }
+      
+      g_dimensions = {};
+      g_dimensions.rink_width = canvas.width;
+      g_dimensions.rink_height = canvas.height;
+
+      kWidth = g_dimensions.rink_width;
+      kHeight = g_dimensions.rink_height;
+      kCornerRadius = kHeight/10;
+      kCornerRadiusPlusLine = kCornerRadius +2;
+      kGoalLineHeight = kHeight/7/2;
+      kGoalCreaseRadius = kWidth/10;
+      kCircleRadius = kWidth/7;
+
+      // Redraw the rink.
+      DrawRink();
+    }
+
+    function setCookie(cname, cvalue, exdays) {
+      const d = new Date();
+      d.setTime(d.getTime() + (exdays*24*60*60*1000));
+      let expires = "expires="+ d.toUTCString();
+      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    function getCookie(cname) {
+      let name = cname + "=";
+      let ca = document.cookie.split(';');
+      for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+
+    function OnPlayerNamesChanged() {
+      for (let team_idx = 1; team_idx <= 2; team_idx++) {
+        for (let i = 1; i <= 11; i++) {
+          const str = "j_" + team_idx + "_" + i;
+          const player_element = document.getElementById(str).firstElementChild;
+          const player_name = player_element.value;
+          if (player_name == "")
+            continue;
+
+          setCookie(str, player_name, 365);
+        }
+      }
+      DrawRink();
+    }
+
+    function DrawRink() {
+      let canvas = document.getElementById("c");
+      let ctx = canvas.getContext("2d");
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      DrawPerimeter(ctx);
+      DrawLines(ctx);
+      DrawGoalCrease(ctx);
+      DrawFaceoffCircles(ctx);
+      DrawOtherFaceoffSpots(ctx);
+      DrawPlayerNames(ctx);
+    }
+  </script>
+</head>
+<body> 
+  <div class="topnav">
+    <div id="topnav-edit" class="highlight" onclick="activateEditTab()">Edit</div>
+    <div id="topnav-rink" onclick="activateRinkTab()">Rink</div>
+  </div>
+  <div id="contents">
+    <div id="edit-tab">
+      Équipe des bleus:
+    <div class="oline">
+      <div class="my-draggable" id="j_1_1">
+        <input type="text" placeholder="Attaquant 1" />
+      </div>
+      <div class="my-draggable" id="j_1_2">
+        <input type="text" placeholder="Attaquant 2" />
+      </div>
+      <div class="my-draggable" id="j_1_3">
+        <input type="text" placeholder="Attaquant 3" />
+      </div>
+    </div>
+    <div class="oline">
+      <div class="my-draggable" id="j_1_4">
+        <input type="text" placeholder="Attaquant 4" />
+      </div>
+      <div class="my-draggable" id="j_1_5">
+        <input type="text" placeholder="Attaquant 5" />
+      </div>
+      <div class="my-draggable" id="j_1_6">
+        <input type="text" placeholder="Attaquant 6" />
+      </div>
+    </div>
+    <div class="dline">
+      <div class="my-draggable" id="j_1_7">
+        <input type="text" placeholder="Défenseur 1" />
+      </div>
+      <div class="my-draggable" id="j_1_8">
+        <input type="text" placeholder="Défenseur 2" />
+      </div>
+    </div>
+    <div class="dline">
+      <div class="my-draggable" id="j_1_9">
+        <input type="text" placeholder="Défenseur 3" />
+      </div>
+      <div class="my-draggable" id="j_1_10">
+        <input type="text" placeholder="Défenseur 4" />
+      </div>
+    </div>
+    <div class="gline">
+      <div class="my-draggable" id="j_1_11">
+        <input type="text" placeholder="Gardien de but" />
+      </div>
+    </div>
+    Équipe des blancs:
+    <div class="oline">
+      <div class="my-draggable" id="j_2_1">
+        <input type="text" placeholder="Attaquant 1" />
+      </div>
+      <div class="my-draggable" id="j_2_2">
+        <input type="text" placeholder="Attaquant 2" />
+      </div>
+      <div class="my-draggable" id="j_2_3">
+        <input type="text" placeholder="Attaquant 3" />
+      </div>
+    </div>
+    <div class="oline">
+      <div class="my-draggable" id="j_2_4">
+        <input type="text" placeholder="Attaquant 4" />
+      </div>
+      <div class="my-draggable" id="j_2_5">
+        <input type="text" placeholder="Attaquant 5" />
+      </div>
+      <div class="my-draggable" id="j_2_6">
+        <input type="text" placeholder="Attaquant 6" />
+      </div>
+    </div>
+    <div class="dline">
+      <div class="my-draggable" id="j_2_7">
+        <input type="text" placeholder="Défenseur 1" />
+      </div>
+      <div class="my-draggable" id="j_2_8">
+        <input type="text" placeholder="Défenseur 2" />
+      </div>
+    </div>
+    <div class="dline">
+      <div class="my-draggable" id="j_2_9">
+        <input type="text" placeholder="Défenseur 3" />
+      </div>
+      <div class="my-draggable" id="j_2_10">
+        <input type="text" placeholder="Défenseur 4" />
+      </div>
+    </div>
+    <div class="gline">
+      <div class="my-draggable" id="j_2_11">
+        <input type="text" placeholder="Gardien de but" />
+      </div>
+    </div>
+    <button onclick="ClearNames()">Clear all names</button>
+    <button class="hidden" onclick="doCopyToClipboard()">Copy to clipboard</button>
+    </div>
+    <div id="rink-tab" class="hidden">
+      <canvas id="c" onclick="DrawRink()"></canvas>
+    </div>
+  </div>
+
+
+</body>
+</html>
