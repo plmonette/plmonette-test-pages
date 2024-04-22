@@ -1,6 +1,6 @@
 <html>
 <body>
-	v5
+	v6
 <button id="pip_button">Open PIP</button>
 <button id="window_button">Open new window</button>
 <button id="file_picker_button">Open file picker</button>
@@ -35,6 +35,8 @@ windowButton.addEventListener('click', async () => {
 });
 
 const file_picker = document.getElementById("file_picker");
+console.log("file picker:");
+	console.log(file_picker);
 const file_picker_button = document.getElementById("file_picker_button");
 	
 windowButton.addEventListener('click', async () => {
