@@ -1,7 +1,10 @@
 <html>
 <body>
+<button id="pip_button">Open PIP</button>
+<button id="window_button">Open new window</button>
 <div id="frame1">
-	<button id="pip_button">Open PIP</button>
+	This content will move to the PIP window.
+	<input type="file"></input>
 </div>
 
 <script>
@@ -15,8 +18,18 @@ pipButton.addEventListener('click', async () => {
 
   // Move the player to the Picture-in-Picture window.
   pipWindow.document.body.append(player);
-  
-  //triggerFileSelection();
+});
+	
+const windowButton = document.getElementById("window_button");
+windowButton.addEventListener('click', async () => {
+  console.log("Open PIP clicked.");
+
+  const player = document.querySelector("#frame1");
+  // Open a Picture-in-Picture window.
+  const window = window.open("", "_self");
+
+  // Move the player to the Picture-in-Picture window.
+  window.document.body.append(player);
 });
 </script>
 </body>
