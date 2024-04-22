@@ -1,6 +1,6 @@
 <html>
 <body>
-	v1
+	v2
 <button id="pip_button">Open PIP</button>
 <button id="window_button">Open new window</button>
 <div id="frame1">
@@ -27,10 +27,10 @@ windowButton.addEventListener('click', async () => {
 
   const player = document.querySelector("#frame1");
   // Open a Picture-in-Picture window.
-  const window = window.open("", "_self");
+  const new_window = window.open("", "_self");
 
   // Move the player to the Picture-in-Picture window.
-  window.document.body.append(player);
+  new_window.document.body.append(player);
 });
 </script>
 </body>
