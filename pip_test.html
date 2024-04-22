@@ -12,38 +12,38 @@
 <script>
 const pipButton = document.getElementById("pip_button");
 pipButton.addEventListener('click', async () => {
-  console.log("Open PIP clicked.");
-
-  const player = document.querySelector("#frame1");
-  // Open a Picture-in-Picture window.
-  const pipWindow = await documentPictureInPicture.requestWindow();
-
-  // Move the player to the Picture-in-Picture window.
-  pipWindow.document.body.append(player);
-});
+	  console.log("Open PIP clicked.");
+	
+	  const player = document.querySelector("#frame1");
+	  // Open a Picture-in-Picture window.
+	  const pipWindow = await documentPictureInPicture.requestWindow();
+	
+	  // Move the player to the Picture-in-Picture window.
+	  pipWindow.document.body.append(player);
+  });
 	
 const windowButton = document.getElementById("window_button");
 windowButton.addEventListener('click', async () => {
-  console.log("Open new window clicked.");
-
-  const player = document.querySelector("#frame1");
-  // Open a new window.
-  const new_window = window.open("", "_blank");
-
-  // Move the player to the Picture-in-Picture window.
-  new_window.document.body.append(player);
-});
+	  console.log("Open new window clicked.");
+	
+	  const player = document.querySelector("#frame1");
+	  // Open a new window.
+	  const new_window = window.open("", "_blank");
+	
+	  // Move the player to the Picture-in-Picture window.
+	  new_window.document.body.append(player);
+  });
 
 const file_picker = document.getElementById("file_picker");
 console.log("file picker:");
-	console.log(file_picker);
+console.log(file_picker);
 const file_picker_button = document.getElementById("file_picker_button");
 	
-file_picker.addEventListener('click', async () => {
+file_picker_button.addEventListener('click', async () => {
 	console.log("Open file picker clicked.");
 
 	file_picker.click();
-});
+  });
 </script>
 </body>
 </html>
