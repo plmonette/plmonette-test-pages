@@ -1,11 +1,12 @@
 <html>
 <body>
-	v3
+	v5
 <button id="pip_button">Open PIP</button>
 <button id="window_button">Open new window</button>
+<button id="file_picker_button">Open file picker</button>
 <div id="frame1">
-	This content will move to the PIP window.
-	<input type="file"></input>
+	This content will move to the other window.
+	<input type="file" id="file_picker"></input>
 </div>
 
 <script>
@@ -31,6 +32,15 @@ windowButton.addEventListener('click', async () => {
 
   // Move the player to the Picture-in-Picture window.
   new_window.document.body.append(player);
+});
+
+const file_picker = document.getElementById("file_picker");
+const file_picker_button = document.getElementById("file_picker_button");
+	
+windowButton.addEventListener('click', async () => {
+	console.log("Open file picker clicked.");
+
+	file_picker.click();
 });
 </script>
 </body>
