@@ -1,6 +1,6 @@
 <html>
 <body>
-	v7
+	v8
 <button id="pip_button">Open PIP</button>
 <button id="window_button">Open new window</button>
 <button id="file_picker_button">Open file picker</button>
@@ -10,13 +10,16 @@
 </div>
 
 <script>
+let newWindow = null;
+let pipWindow = null;
+	
 const pipButton = document.getElementById("pip_button");
 pipButton.addEventListener('click', async () => {
 	  console.log("Open PIP clicked.");
 	
 	  const player = document.querySelector("#frame1");
 	  // Open a Picture-in-Picture window.
-	  const pipWindow = await documentPictureInPicture.requestWindow();
+	  pipWindow = await documentPictureInPicture.requestWindow();
 	
 	  // Move the player to the Picture-in-Picture window.
 	  pipWindow.document.body.append(player);
@@ -28,10 +31,10 @@ windowButton.addEventListener('click', async () => {
 	
 	  const player = document.querySelector("#frame1");
 	  // Open a new window.
-	  const new_window = window.open("", "_blank");
+	  newWindow = window.open("", "_blank");
 	
 	  // Move the player to the Picture-in-Picture window.
-	  new_window.document.body.append(player);
+	  newWindow.document.body.append(player);
   });
 
 const file_picker = document.getElementById("file_picker");
@@ -42,6 +45,23 @@ const file_picker_button = document.getElementById("file_picker_button");
 file_picker_button.addEventListener('click', async () => {
 	console.log("Open file picker clicked.");
 
+	if (pipWindow) {
+		 const fileInputs = pipWindow.window.document.querySelectorAll('input[type="file"]');
+     
+	        fileInputs.forEach(input => {
+		  input.click(); // Programmatically trigger the file selection dialog
+	        });
+		return;
+	}
+	if (newWindow) {
+		 const fileInputs = newWindow.document.querySelectorAll('input[type="file"]');
+     
+	        fileInputs.forEach(input => {
+		  input.click(); // Programmatically trigger the file selection dialog
+	        });
+		return;
+	}
+	
 	file_picker.click();
   });
 </script>
