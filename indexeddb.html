@@ -1,0 +1,38 @@
+<html>
+<head>
+<script>
+let database = null;
+
+function OpenDatabase() {
+  if (database) {
+    return;
+  }
+  const open_db_request = window.indexedDB.open('test_db', 1);
+  open_db_request.onerror = (e) => {
+    console.log("Error opening DB."); 
+  };
+
+  open_db_request.onsuccess = (e) => {
+    console.log("Success opening DB.");
+    database = open_db_request.result;
+  };
+
+  open_db_request.onupgradeneeded = (e) => {
+    console.log("On upgrade needed"); 
+  };
+}
+
+function CloseDatabase() {
+  if (database) {
+    database.close();
+    database = null;
+  }
+}
+</script>
+</head>
+<body>
+  <h1>IndexedDB test</h1>
+  <button onclick="OpenDatabase()">Open databse</button>
+  <button onclick="CloseDatabase()">Close Database</button>
+</body>
+</html>
