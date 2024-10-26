@@ -135,6 +135,43 @@
           }); 
       });
     }
+    function doExport() {
+      let info = {}
+      let date = window.localStorage.getItem("date");
+      if (date) {
+        info["date"] = date;
+      }
+      let player_elements = document.getElementsByClassName("my-draggable");
+      for (const player_element of player_elements) {
+        info[player_element.id] = window.localStorage.getItem(player_element.id);
+      }
+
+      prompt("Copy export string", JSON.stringify(info));
+    }
+    function doImport() {
+      let json_text = prompt("Type in import string.");
+      let text = `{"date":"2024-10-25","bleu_ailier_gauche_1":"Patrick","bleu_centre_1":"Nic","bleu_ailier_droit_1":"Dave","bleu_ailier_gauche_2":"Frank","bleu_centre_2":"Jul","bleu_ailier_droit_2":"Phil","bleu_def_gauche_1":"Patdef","bleu_def_droit_1":"nicdef","bleu_def_gauche_2":"Davedef","bleu_def_droit_2":"Phildef","bleu_gardien":"goaler1","bleu_rover":"","blanc_ailier_gauche_1":"a1","blanc_centre_1":"a2","blanc_ailier_droit_1":"a3","blanc_ailier_gauche_2":"a4","blanc_centre_2":"a5","blanc_ailier_droit_2":"a6","blanc_def_gauche_1":"d1","blanc_def_droit_1":"d2","blanc_def_gauche_2":"d3","blanc_def_droit_2":"d4","blanc_gardien":"goaler2","blanc_rover":"","absent_1":"","absent_2":"","absent_3":"NicMonette","absent_4":"","absent_5":"","absent_6":""}`;
+
+      let info = JSON.parse(json_text);
+
+      let date_picker = document.getElementById('date-picker');
+      date_picker.value = info["date"];
+
+      let player_elements = document.getElementsByClassName("my-draggable");
+      for (const player_element of player_elements) {
+        console.log(player_element.id);
+        console.log(info[player_element.id]);
+        let player_name = info[player_element.id];
+        if (!player_name) {
+          player_name = "";
+        }
+        window.localStorage.setItem(player_element.id, player_name);
+        player_element.firstElementChild.value = player_name;
+      }
+
+     // console.log(info);
+      DrawRink();
+    }
     function deactivateEditTab() {
       const edit_tab_element = document.getElementById("edit-tab");
       edit_tab_element.classList.add("hidden");
@@ -178,7 +215,7 @@
       //  value = document.getElementById(id).firstElementChild.placeholder;
       //}
 
-      if (value && (id == "j_1_12" || id == "j_2_12")) {
+      if (value && (id == "bleu_rover" || id == "blanc_rover")) {
         value = "Rover: " + value;
       }
 
@@ -354,9 +391,8 @@
     function DrawStroked(ctx, text, x, y, color, fontSize) {
       ctx.font = fontSize.toString() + "px sans-serif";
       ctx.strokeStyle = 'black';
-      ctx.lineWidth = 5;
-      ctx.lineJoin="miter";
-      ctx.miterLimit=2;
+      ctx.lineWidth = 4;
+      ctx.lineJoin="round";
       ctx.strokeText(text, x, y);
       ctx.fillStyle = color;
       ctx.fillText(text, x, y);
@@ -417,23 +453,23 @@
       const kSecondDLineHeightDelta = 2.1*kHeight/7;
 
       const kPlayerNamePositions = {
-        "j_1_1": [kCenterWidth - kCenterOfLeftThird, kCenterHeight - kFirstALineHeightDelta],
-        "j_1_2": [kCenterWidth, kCenterHeight -kFirstALineHeightDelta],
-        "j_1_3": [kCenterWidth + kCenterOfLeftThird, kCenterHeight - kFirstALineHeightDelta],
+        "bleu_ailier_gauche_1": [kCenterWidth - kCenterOfLeftThird, kCenterHeight - kFirstALineHeightDelta],
+        "bleu_centre_1": [kCenterWidth, kCenterHeight -kFirstALineHeightDelta],
+        "bleu_ailier_droit_1": [kCenterWidth + kCenterOfLeftThird, kCenterHeight - kFirstALineHeightDelta],
 
-        "j_1_4": [kCenterWidth - kCenterOfLeftThird, kCenterHeight - kSecondALineHeightDelta],
-        "j_1_5": [kCenterWidth, kCenterHeight -kSecondALineHeightDelta],
-        "j_1_6": [kCenterWidth + kCenterOfLeftThird, kCenterHeight - kSecondALineHeightDelta],
+        "bleu_ailier_gauche_2": [kCenterWidth - kCenterOfLeftThird, kCenterHeight - kSecondALineHeightDelta],
+        "bleu_centre_2": [kCenterWidth, kCenterHeight -kSecondALineHeightDelta],
+        "bleu_ailier_droit_2": [kCenterWidth + kCenterOfLeftThird, kCenterHeight - kSecondALineHeightDelta],
 
-        "j_1_7": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight - kFirstDLineHeightDelta],
-        "j_1_8": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight - kFirstDLineHeightDelta],
+        "bleu_def_gauche_1": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight - kFirstDLineHeightDelta],
+        "bleu_def_droit_1": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight - kFirstDLineHeightDelta],
 
-        "j_1_9": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight - kSecondDLineHeightDelta],
-        "j_1_10": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight - kSecondDLineHeightDelta],
+        "bleu_def_gauche_2": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight - kSecondDLineHeightDelta],
+        "bleu_def_droit_2": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight - kSecondDLineHeightDelta],
 
-        "j_1_11": [kCenterWidth, kCenterHeight - 4*kHeight/10],
+        "bleu_gardien": [kCenterWidth, kCenterHeight - 4*kHeight/10],
 
-        "j_1_12": [kCenterWidth, kCenterHeight - 1.60*kHeight/10],
+        "bleu_rover": [kCenterWidth, kCenterHeight - 1.60*kHeight/10],
       }
 
       for (const [key, value] of Object.entries(kPlayerNamePositions)) {
@@ -441,23 +477,23 @@
         DrawStroked(ctx, name, value[0], value[1], "#82b1ed", 16);
       }
       const kPlayerNamePositions2 = {
-        "j_2_1": [kCenterWidth - kCenterOfLeftThird, kCenterHeight + kFirstALineHeightDelta],
-        "j_2_2": [kCenterWidth, kCenterHeight + kFirstALineHeightDelta],
-        "j_2_3": [kCenterWidth + kCenterOfLeftThird, kCenterHeight + kFirstALineHeightDelta],
+        "blanc_ailier_gauche_1": [kCenterWidth - kCenterOfLeftThird, kCenterHeight + kFirstALineHeightDelta],
+        "blanc_centre_1": [kCenterWidth, kCenterHeight + kFirstALineHeightDelta],
+        "blanc_ailier_droit_1": [kCenterWidth + kCenterOfLeftThird, kCenterHeight + kFirstALineHeightDelta],
 
-        "j_2_4": [kCenterWidth - kCenterOfLeftThird, kCenterHeight + kSecondALineHeightDelta],
-        "j_2_5": [kCenterWidth, kCenterHeight + kSecondALineHeightDelta],
-        "j_2_6": [kCenterWidth + kCenterOfLeftThird, kCenterHeight + kSecondALineHeightDelta],
+        "blanc_ailier_gauche_2": [kCenterWidth - kCenterOfLeftThird, kCenterHeight + kSecondALineHeightDelta],
+        "blanc_centre_2": [kCenterWidth, kCenterHeight + kSecondALineHeightDelta],
+        "blanc_ailier_droit_2": [kCenterWidth + kCenterOfLeftThird, kCenterHeight + kSecondALineHeightDelta],
 
-        "j_2_7": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight + kFirstDLineHeightDelta],
-        "j_2_8": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight + kFirstDLineHeightDelta],
+        "blanc_def_gauche_1": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight + kFirstDLineHeightDelta],
+        "blanc_def_droit_1": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight + kFirstDLineHeightDelta],
 
-        "j_2_9": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight + kSecondDLineHeightDelta],
-        "j_2_10": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight + kSecondDLineHeightDelta],
+        "blanc_def_gauche_2": [kCenterWidth - kCenterOfLeftHalf, kCenterHeight + kSecondDLineHeightDelta],
+        "blanc_def_droit_2": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight + kSecondDLineHeightDelta],
 
-        "j_2_11": [kCenterWidth, kCenterHeight + 4*kHeight/10],
+        "blanc_gardien": [kCenterWidth, kCenterHeight + 4*kHeight/10],
 
-        "j_2_12": [kCenterWidth, kCenterHeight + 1.60*kHeight/10],
+        "blanc_rover": [kCenterWidth, kCenterHeight + 1.60*kHeight/10],
       };
 
       for (const [key, value] of Object.entries(kPlayerNamePositions2)) {
@@ -466,7 +502,7 @@
       }
 
       // Draw absents.
-      let absents = ["a_1","a_2","a_3","a_4","a_5","a_6"]
+      let absents = ["absent_1","absent_2","absent_3","absent_4","absent_5","absent_6"]
       absents = absents.map(id => document.getElementById(id).firstElementChild.value);
       absents = absents.filter(name => name);
 
@@ -620,28 +656,7 @@
       }
     }
 
-    function MaybeMigrate() {
-      let date = getCookie("date");
-      if (!date) {
-        date = GetTodayStr();
-      }
-      window.localStorage.setItem("date", date);
-
-      let player_elements = document.getElementsByClassName("my-draggable");
-      for (const player_element of player_elements) {
-        window.localStorage.setItem(player_element.id, getCookie(player_element.id));
-      }
-
-    }
-
     addEventListener("load", () => {
-
-      // Migrate to localStorage
-      if (window.localStorage.length === 0) {
-        console.log(document.cookie);
-        MaybeMigrate();
-      }
-
       const player_elements = document.getElementsByClassName("my-draggable");
       for (const player_element of player_elements) {
         player_element.firstElementChild.value = window.localStorage.getItem(player_element.id);
@@ -694,22 +709,8 @@
       DrawRink();
     }
 
-    function getCookie(cname) {
-      let name = cname + "=";
-      let ca = document.cookie.split(';');
-      for(let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') {
-          c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-          return c.substring(name.length, c.length);
-        }
-      }
-      return "";
-    }
-
     function OnPlayerNamesChanged() {
+      console.log("OnPlayerNamesChanged");
       let draggables = document.getElementsByClassName("my-draggable");
 
       for (let draggable of draggables) {
@@ -752,127 +753,129 @@
 
       Équipe des bleus:
     <div class="oline">
-      <div class="my-draggable" id="j_1_1">
+      <div class="my-draggable" id="bleu_ailier_gauche_1">
         <input type="text" placeholder="Attaquant 1" />
       </div>
-      <div class="my-draggable" id="j_1_2">
+      <div class="my-draggable" id="bleu_centre_1">
         <input type="text" placeholder="Attaquant 2" />
       </div>
-      <div class="my-draggable" id="j_1_3">
+      <div class="my-draggable" id="bleu_ailier_droit_1">
         <input type="text" placeholder="Attaquant 3" />
       </div>
     </div>
     <div class="oline">
-      <div class="my-draggable" id="j_1_4">
+      <div class="my-draggable" id="bleu_ailier_gauche_2">
         <input type="text" placeholder="Attaquant 4" />
       </div>
-      <div class="my-draggable" id="j_1_5">
+      <div class="my-draggable" id="bleu_centre_2">
         <input type="text" placeholder="Attaquant 5" />
       </div>
-      <div class="my-draggable" id="j_1_6">
+      <div class="my-draggable" id="bleu_ailier_droit_2">
         <input type="text" placeholder="Attaquant 6" />
       </div>
     </div>
     <div class="dline">
-      <div class="my-draggable" id="j_1_7">
+      <div class="my-draggable" id="bleu_def_gauche_1">
         <input type="text" placeholder="Défenseur 1" />
       </div>
-      <div class="my-draggable" id="j_1_8">
+      <div class="my-draggable" id="bleu_def_droit_1">
         <input type="text" placeholder="Défenseur 2" />
       </div>
     </div>
     <div class="dline">
-      <div class="my-draggable" id="j_1_9">
+      <div class="my-draggable" id="bleu_def_gauche_2">
         <input type="text" placeholder="Défenseur 3" />
       </div>
-      <div class="my-draggable" id="j_1_10">
+      <div class="my-draggable" id="bleu_def_droit_2">
         <input type="text" placeholder="Défenseur 4" />
       </div>
     </div>
     <div class="gline">
-      <div class="my-draggable" id="j_1_11">
+      <div class="my-draggable" id="bleu_gardien">
         <input type="text" placeholder="Gardien de but" />
       </div>
     </div>
     <div class="extraline">
-      <div class="my-draggable" id="j_1_12">
+      <div class="my-draggable" id="bleu_rover">
         <input type="text" placeholder="Rover" />
       </div>
     </div>
     Équipe des blancs:
     <div class="oline">
-      <div class="my-draggable" id="j_2_1">
+      <div class="my-draggable" id="blanc_ailier_gauche_1">
         <input type="text" placeholder="Attaquant 1" />
       </div>
-      <div class="my-draggable" id="j_2_2">
+      <div class="my-draggable" id="blanc_centre_1">
         <input type="text" placeholder="Attaquant 2" />
       </div>
-      <div class="my-draggable" id="j_2_3">
+      <div class="my-draggable" id="blanc_ailier_droit_1">
         <input type="text" placeholder="Attaquant 3" />
       </div>
     </div>
     <div class="oline">
-      <div class="my-draggable" id="j_2_4">
+      <div class="my-draggable" id="blanc_ailier_gauche_2">
         <input type="text" placeholder="Attaquant 4" />
       </div>
-      <div class="my-draggable" id="j_2_5">
+      <div class="my-draggable" id="blanc_centre_2">
         <input type="text" placeholder="Attaquant 5" />
       </div>
-      <div class="my-draggable" id="j_2_6">
+      <div class="my-draggable" id="blanc_ailier_droit_2">
         <input type="text" placeholder="Attaquant 6" />
       </div>
     </div>
     <div class="dline">
-      <div class="my-draggable" id="j_2_7">
+      <div class="my-draggable" id="blanc_def_gauche_1">
         <input type="text" placeholder="Défenseur 1" />
       </div>
-      <div class="my-draggable" id="j_2_8">
+      <div class="my-draggable" id="blanc_def_droit_1">
         <input type="text" placeholder="Défenseur 2" />
       </div>
     </div>
     <div class="dline">
-      <div class="my-draggable" id="j_2_9">
+      <div class="my-draggable" id="blanc_def_gauche_2">
         <input type="text" placeholder="Défenseur 3" />
       </div>
-      <div class="my-draggable" id="j_2_10">
+      <div class="my-draggable" id="blanc_def_droit_2">
         <input type="text" placeholder="Défenseur 4" />
       </div>
     </div>
     <div class="gline">
-      <div class="my-draggable" id="j_2_11">
+      <div class="my-draggable" id="blanc_gardien">
         <input type="text" placeholder="Gardien de but" />
       </div>
     </div>
     <div class="extraline">
-      <div class="my-draggable" id="j_2_12">
+      <div class="my-draggable" id="blanc_rover">
         <input type="text" placeholder="Rover" />
       </div>
     </div>
     Absents:
     <div class="absentline">
-      <div class="my-draggable" id="a_1">
+      <div class="my-draggable" id="absent_1">
         <input type="text" placeholder="Absent" />
       </div>
-      <div class="my-draggable" id="a_2">
+      <div class="my-draggable" id="absent_2">
         <input type="text" placeholder="Absent" />
       </div>
-      <div class="my-draggable" id="a_3">
+      <div class="my-draggable" id="absent_3">
         <input type="text" placeholder="Absent" />
       </div>
     </div>
     <div class="absentline">
-      <div class="my-draggable" id="a_4">
+      <div class="my-draggable" id="absent_4">
         <input type="text" placeholder="Absent" />
       </div>
-      <div class="my-draggable" id="a_5">
+      <div class="my-draggable" id="absent_5">
         <input type="text" placeholder="Absent" />
       </div>
-      <div class="my-draggable" id="a_6">
+      <div class="my-draggable" id="absent_6">
         <input type="text" placeholder="Absent" />
       </div>
     </div>
     <button onclick="ClearNames()">Clear all names</button>
     <button class="hidden" onclick="doCopyToClipboard()">Copy to clipboard</button>
+    <button class="hidden" onclick="doExport()">Export</button>
+    <button class="hidden" onclick="doImport()">Import</button>
     </div>
     <div id="rink-tab" class="hidden">
       <canvas id="c" onclick="DrawRink()"></canvas>
