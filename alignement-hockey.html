@@ -150,8 +150,6 @@
     }
     function doImport() {
       let json_text = prompt("Type in import string.");
-      let text = `{"date":"2024-10-25","bleu_ailier_gauche_1":"Patrick","bleu_centre_1":"Nic","bleu_ailier_droit_1":"Dave","bleu_ailier_gauche_2":"Frank","bleu_centre_2":"Jul","bleu_ailier_droit_2":"Phil","bleu_def_gauche_1":"Patdef","bleu_def_droit_1":"nicdef","bleu_def_gauche_2":"Davedef","bleu_def_droit_2":"Phildef","bleu_gardien":"goaler1","bleu_rover":"","blanc_ailier_gauche_1":"a1","blanc_centre_1":"a2","blanc_ailier_droit_1":"a3","blanc_ailier_gauche_2":"a4","blanc_centre_2":"a5","blanc_ailier_droit_2":"a6","blanc_def_gauche_1":"d1","blanc_def_droit_1":"d2","blanc_def_gauche_2":"d3","blanc_def_droit_2":"d4","blanc_gardien":"goaler2","blanc_rover":"","absent_1":"","absent_2":"","absent_3":"NicMonette","absent_4":"","absent_5":"","absent_6":""}`;
-
       let info = JSON.parse(json_text);
 
       let date_picker = document.getElementById('date-picker');
@@ -159,8 +157,6 @@
 
       let player_elements = document.getElementsByClassName("my-draggable");
       for (const player_element of player_elements) {
-        console.log(player_element.id);
-        console.log(info[player_element.id]);
         let player_name = info[player_element.id];
         if (!player_name) {
           player_name = "";
@@ -169,7 +165,6 @@
         player_element.firstElementChild.value = player_name;
       }
 
-     // console.log(info);
       DrawRink();
     }
     function deactivateEditTab() {
@@ -710,7 +705,6 @@
     }
 
     function OnPlayerNamesChanged() {
-      console.log("OnPlayerNamesChanged");
       let draggables = document.getElementsByClassName("my-draggable");
 
       for (let draggable of draggables) {
