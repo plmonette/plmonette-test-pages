@@ -637,7 +637,7 @@
     addEventListener("load", () => {
 
       // Migrate to localStorage
-      if (window.localStorage.info === undefined) {
+      if (window.localStorage.length === 0) {
         console.log(document.cookie);
         MaybeMigrate();
       }
