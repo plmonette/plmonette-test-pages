@@ -10,6 +10,21 @@
       padding:2px;
       margin:2px;
     }
+    .oline {
+      display: flex;
+    }
+    .dline {
+      display: flex;
+    }
+    .gline {
+      display: flex;
+    }
+    .extraline {
+      display: flex;
+    }
+    .absentline {
+      display: flex;
+    }
 @media (max-width: 500px) {
   * {
     margin: 0;
@@ -59,11 +74,21 @@
   #contents {
     flex-grow: 1;
   }
+  .my-draggable {
+    text-align: right;
+    margin: 5px;
+  }
+  .my-draggable input {
+    width: 100px;
+  }
 }
 @media (min-width: 500px) {
   * {
     margin: 0;
     padding: 0;
+  }
+  div {
+    margin: 4px;
   }
   html, body {
     height: 100%;
@@ -88,6 +113,14 @@
   #contents {
     flex-grow: 1;
     display:flex;
+  }
+  .my-draggable {
+    background-color: powderblue;
+    width: 200px;
+    height: 20px;
+    cursor: move;
+    text-align: right;
+    margin: 5px;
   }
 }
 </style>
@@ -141,9 +174,14 @@
     // Ensure input is always firstElementChild.
     function getNameFromElementId(id) {
       var value =  document.getElementById(id).firstElementChild.value;
-      if (value == "") {
-        value = document.getElementById(id).firstElementChild.placeholder;
+      //if (!value) {
+      //  value = document.getElementById(id).firstElementChild.placeholder;
+      //}
+
+      if (value && (id == "j_1_12" || id == "j_2_12")) {
+        value = "Rover: " + value;
       }
+
       return value;
     }
  
@@ -210,6 +248,8 @@
  
     function DrawGoalCrease(ctx) {
       const kWidthCenter = kWidth/2;
+
+      ctx.strokeStyle = "red";
  
       ctx.beginPath();
       ctx.arc(kWidthCenter, kGoalLineHeight, kGoalCreaseRadius, 0, Math.PI);
@@ -221,6 +261,26 @@
       ctx.arc(kWidthCenter, kHeight-kGoalLineHeight, kGoalCreaseRadius, Math.PI, 0);
       ctx.stroke();
       ctx.fillStyle = "blue";
+      ctx.fill();
+    }
+
+    function DrawGoalNet(ctx) {
+      const kWidthCenter = kWidth/2;
+
+      ctx.strokeStyle = "red";
+
+      ctx.beginPath();
+      ctx.arc(kWidthCenter-10, kGoalLineHeight, kGoalCreaseRadius-20,  Math.PI, 3/2*Math.PI);
+      ctx.arc(kWidthCenter+10, kGoalLineHeight, kGoalCreaseRadius-20,  3/2*Math.PI, 2*Math.PI);
+      ctx.stroke();
+      ctx.fillStyle = "white";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(kWidthCenter+10, kHeight-kGoalLineHeight, kGoalCreaseRadius-20,  0, 1/2*Math.PI);
+      ctx.arc(kWidthCenter-10, kHeight-kGoalLineHeight, kGoalCreaseRadius-20,  1/2*Math.PI, Math.PI);
+      ctx.stroke();
+      ctx.fillStyle = "white";
       ctx.fill();
     }
  
@@ -302,6 +362,43 @@
       ctx.fillText(text, x, y);
     }
 
+    function DrawDate(ctx) {
+      ctx.textAlign = "center";
+
+      const kCenterWidth = kWidth/2;
+      const kCenterHeight = kHeight/2;
+
+      // Draw date.
+      let date_str = document.getElementById("date-picker").value;
+      if (date_str) {
+        let components = date_str.split("-");
+        let date = new Date();
+
+        const months = [
+          "janvier",
+          "février",
+          "mars",
+          "avril",
+          "mai",
+          "juin",
+          "juillet",
+          "août", 
+          "septembre", 
+          "octobre",
+          "novembre",
+          "décembre"
+        ];
+
+        date.setFullYear(components[0]);
+        date.setMonth(components[1]-1);
+        date.setDate(components[2]);
+
+        let new_date_str = "Game du " + components[2] + " " + months[components[1]-1] + " " + components[0];
+
+        DrawStroked(ctx, new_date_str, kCenterWidth, 1/22*kHeight, "white", 16);
+      }
+    }
+
     function DrawPlayerNames(ctx) {
       ctx.textAlign = "center";
 
@@ -335,6 +432,8 @@
         "j_1_10": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight - kSecondDLineHeightDelta],
 
         "j_1_11": [kCenterWidth, kCenterHeight - 4*kHeight/10],
+
+        "j_1_12": [kCenterWidth, kCenterHeight - 1.60*kHeight/10],
       }
 
       for (const [key, value] of Object.entries(kPlayerNamePositions)) {
@@ -357,11 +456,43 @@
         "j_2_10": [kCenterWidth + kCenterOfLeftHalf, kCenterHeight + kSecondDLineHeightDelta],
 
         "j_2_11": [kCenterWidth, kCenterHeight + 4*kHeight/10],
+
+        "j_2_12": [kCenterWidth, kCenterHeight + 1.60*kHeight/10],
       };
 
       for (const [key, value] of Object.entries(kPlayerNamePositions2)) {
         const name = getNameFromElementId(key);
         DrawStroked(ctx, name, value[0], value[1], "white", 16);
+      }
+
+      // Draw absents.
+      let absents = ["a_1","a_2","a_3","a_4","a_5","a_6"]
+      absents = absents.map(id => document.getElementById(id).firstElementChild.value);
+      absents = absents.filter(name => name);
+
+      const absent_count = absents.length;
+      if (absent_count == 0)
+        return;
+
+      if (absent_count <= 3) {
+        absents = absents.join(", ");
+        absents = "Absents: " + absents;
+
+        DrawStroked(ctx, absents, kCenterWidth, kHeight*32/33, "pink", 16);
+      } else {
+        let firstAbsents = absents.slice(0, 3);
+
+        firstAbsents = firstAbsents.join(", ");
+        firstAbsents = "Absents: " + firstAbsents;
+
+        DrawStroked(ctx, firstAbsents, kCenterWidth, kHeight*22/23, "pink", 16);
+
+        let moreAbsents = absents.slice(3, 6);
+
+
+        moreAbsents = moreAbsents.join(", ");
+
+        DrawStroked(ctx, moreAbsents, kCenterWidth, kHeight*52/53, "pink", 16);
       }
     }
 
@@ -369,31 +500,160 @@
       if (confirm("Are you sure you want to clear all names?") != true)
         return;
 
-      for (let team_idx = 1; team_idx <= 2; team_idx++) {
-        for (let i = 1; i <= 11; i++) {
-          const str = "j_" + team_idx + "_" + i;
-          setCookie(str, "", -1);
+      let draggables = document.getElementsByClassName("my-draggable");
 
-          document.getElementById(str).firstElementChild.value = "";
-        }
+      for (let draggable of draggables) {
+        const str = draggable.id;
+        window.localStorage.setItem(str, "");
+        draggable.firstElementChild.value = "";
+      }
+
+      DrawRink();
+    }
+ 
+    // Ensure input is always firstElementChild.
+    function getNameFromDraggable(draggableElement) {
+      return draggableElement.firstElementChild.value;
+    }
+    function setNameFromDraggable(draggableElement, name) {
+      draggableElement.firstElementChild.value = name;
+    }
+
+    let draggedElement = null;
+    function onDragStart(event) {
+      event.target.classList.add("dragging");
+
+      draggedElement = event.target;
+
+      const name = getNameFromDraggable(event.target);
+      event.dataTransfer.clearData();
+      event.dataTransfer.setData("text/plain", name);
+    }
+
+    function onDragOver(event) {
+      event.preventDefault();
+    }
+
+    function onDrop(event) {
+      event.preventDefault();
+
+      // If dropped directly on input element, treat it as if dropped on div. 
+      let targetElement = event.target;
+      if (targetElement.nodeName == "INPUT") {
+        targetElement = targetElement.parentElement;
+      }
+
+      const newName = event.dataTransfer.getData("text/plain");
+      setNameFromDraggable(draggedElement, getNameFromDraggable(targetElement));
+      setNameFromDraggable(targetElement, newName);
+      OnPlayerNamesChanged();
+      DrawRink();
+    }
+
+    function onDragEnd(event) {
+      draggedElement.classList.remove("dragging");
+      draggedElement = null;
+    }
+
+    function InitializeDragAndDrop() {
+      const draggableElements = document.getElementsByClassName("my-draggable");
+      for (let i = 0; i < draggableElements.length; i++) {
+        let draggableElement = draggableElements[i];
+        draggableElement.setAttribute("draggable", "true");
+        draggableElement.addEventListener("dragstart", onDragStart);
+        draggableElement.addEventListener("dragover", onDragOver);
+        draggableElement.addEventListener("drop", onDrop);
+        draggableElement.addEventListener("dragend", onDragEnd);
+        let inputElement = draggableElement.firstElementChild;
+        inputElement.setAttribute("draggable", "true");
+        inputElement.addEventListener("dragstart", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        });
+      }
+    }
+
+    function GetTodayStr() {
+      let today = new Date();
+
+      let day_str = today.getDate().toString();
+      if (day_str.length == 1) {
+        day_str = "0" + day_str;
+      }
+
+      let month_str = (today.getMonth() + 1).toString();
+      if (month_str.length == 1) {
+        month_str = "0" + month_str;
+      }
+
+      let date_str = today.getFullYear() + "-" + month_str + "-" + day_str;
+      return date_str;
+    }
+
+    function SetToToday() {
+      let date_picker = document.getElementById('date-picker');
+      let date_str = GetTodayStr();
+ 
+      date_picker.value = date_str;
+      window.localStorage.setItem("date", date_str);
+
+      DrawRink();
+    }
+
+    function OnDateChanged() {
+      let date_picker = document.getElementById('date-picker');
+      let value = date_picker.value;
+      if (value) {
+        window.localStorage.setItem("date", value);
+      }
+
+      DrawRink();
+    }
+
+    function InitializeDate() {
+      let date = window.localStorage.getItem("date");
+      if (!date) {
+        SetToToday();
+      } else {
+        let date_picker = document.getElementById('date-picker');
+        date_picker.value = date;
+      }
+    }
+
+    function MaybeMigrate() {
+      let date = getCookie("date");
+      if (!date) {
+        date = GetTodayStr();
+      }
+      window.localStorage.setItem("date", date);
+
+      let player_elements = document.getElementsByClassName("my-draggable");
+      for (const player_element of player_elements) {
+        window.localStorage.setItem(player_element.id, getCookie(player_element.id));
       }
 
     }
 
     addEventListener("load", () => {
-      // Read cookies.
-      let cookies = document.cookie;
-      console.log(cookies);
+
+      // Migrate to localStorage
+      if (window.localStorage.info === undefined) {
+        console.log(document.cookie);
+        MaybeMigrate();
+      }
 
       const player_elements = document.getElementsByClassName("my-draggable");
       for (const player_element of player_elements) {
-        player_element.firstElementChild.value = getCookie(player_element.id);
+        player_element.firstElementChild.value = window.localStorage.getItem(player_element.id);
         player_element.firstElementChild.addEventListener("keyup", ()=>{
           OnPlayerNamesChanged();
         });
       }
 
       InitializeDimensions();
+      InitializeDate();
+      InitializeDragAndDrop();
+      DrawRink();
     });
     addEventListener("resize", () => {
       InitializeDimensions();
@@ -405,8 +665,6 @@
 */
       // Get size of contents.
       const contents_element = document.getElementById("contents");
-
-      console.log("contents size: " + contents_element.offsetWidth + ", " + contents_element.offsetHeight);
 
       let canvas = document.getElementById("c");
 
@@ -436,13 +694,6 @@
       DrawRink();
     }
 
-    function setCookie(cname, cvalue, exdays) {
-      const d = new Date();
-      d.setTime(d.getTime() + (exdays*24*60*60*1000));
-      let expires = "expires="+ d.toUTCString();
-      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-    }
-
     function getCookie(cname) {
       let name = cname + "=";
       let ca = document.cookie.split(';');
@@ -459,17 +710,14 @@
     }
 
     function OnPlayerNamesChanged() {
-      for (let team_idx = 1; team_idx <= 2; team_idx++) {
-        for (let i = 1; i <= 11; i++) {
-          const str = "j_" + team_idx + "_" + i;
-          const player_element = document.getElementById(str).firstElementChild;
-          const player_name = player_element.value;
-          if (player_name == "")
-            continue;
+      let draggables = document.getElementsByClassName("my-draggable");
 
-          setCookie(str, player_name, 365);
-        }
+      for (let draggable of draggables) {
+        const str = draggable.id;
+        const player_name = draggable.firstElementChild.value;
+        window.localStorage.setItem(str, player_name);
       }
+
       DrawRink();
     }
 
@@ -479,21 +727,29 @@
       ctx.fillStyle = "white";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       DrawPerimeter(ctx);
-      DrawLines(ctx);
+      DrawGoalNet(ctx);
       DrawGoalCrease(ctx);
+      DrawLines(ctx);
       DrawFaceoffCircles(ctx);
       DrawOtherFaceoffSpots(ctx);
+      DrawDate(ctx);
       DrawPlayerNames(ctx);
     }
   </script>
 </head>
 <body> 
   <div class="topnav">
+
     <div id="topnav-edit" class="highlight" onclick="activateEditTab()">Edit</div>
     <div id="topnav-rink" onclick="activateRinkTab()">Rink</div>
   </div>
   <div id="contents">
     <div id="edit-tab">
+      Date:
+      <input id="date-picker" type="date" onchange="OnDateChanged()"></input>
+      <button onclick="SetToToday()">Set to today</button>
+      <br/>
+
       Équipe des bleus:
     <div class="oline">
       <div class="my-draggable" id="j_1_1">
@@ -538,6 +794,11 @@
         <input type="text" placeholder="Gardien de but" />
       </div>
     </div>
+    <div class="extraline">
+      <div class="my-draggable" id="j_1_12">
+        <input type="text" placeholder="Rover" />
+      </div>
+    </div>
     Équipe des blancs:
     <div class="oline">
       <div class="my-draggable" id="j_2_1">
@@ -580,6 +841,34 @@
     <div class="gline">
       <div class="my-draggable" id="j_2_11">
         <input type="text" placeholder="Gardien de but" />
+      </div>
+    </div>
+    <div class="extraline">
+      <div class="my-draggable" id="j_2_12">
+        <input type="text" placeholder="Rover" />
+      </div>
+    </div>
+    Absents:
+    <div class="absentline">
+      <div class="my-draggable" id="a_1">
+        <input type="text" placeholder="Absent" />
+      </div>
+      <div class="my-draggable" id="a_2">
+        <input type="text" placeholder="Absent" />
+      </div>
+      <div class="my-draggable" id="a_3">
+        <input type="text" placeholder="Absent" />
+      </div>
+    </div>
+    <div class="absentline">
+      <div class="my-draggable" id="a_4">
+        <input type="text" placeholder="Absent" />
+      </div>
+      <div class="my-draggable" id="a_5">
+        <input type="text" placeholder="Absent" />
+      </div>
+      <div class="my-draggable" id="a_6">
+        <input type="text" placeholder="Absent" />
       </div>
     </div>
     <button onclick="ClearNames()">Clear all names</button>
