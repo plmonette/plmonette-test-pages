@@ -143,7 +143,11 @@
       }
       let player_elements = document.getElementsByClassName("my-draggable");
       for (const player_element of player_elements) {
-        info[player_element.id] = window.localStorage.getItem(player_element.id);
+        let player_name = window.localStorage.getItem(player_element.id);
+        if (!player_name) {
+          player_name = "";
+        }
+        info[player_element.id] = player_name;
       }
 
       prompt("Copy export string", JSON.stringify(info));
